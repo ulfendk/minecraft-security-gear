@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "secgear",
+	"version": "${version}",
+	"name": "Security Gear",
+	"description": "Security cameras with live monitors, laser tripwires, bombs, pit traps, prison walls, winding bridges, guard towers, guards and guard dogs.",
+	"authors": ["ulfendk"],
+	"contact": {
+		"homepage": "https://ulfendk.github.io/minecraft-security-gear/",
+		"sources": "https://github.com/ulfendk/minecraft-security-gear",
+		"issues": "https://github.com/ulfendk/minecraft-security-gear/issues"
+	},
+	"license": "MIT",
+	"icon": "assets/secgear/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["dk.ulfen.security.SecurityGear"],
+		"client": ["dk.ulfen.security.client.SecurityGearClient"]
+	},
+	"mixins": [
+		{ "config": "secgear.client.mixins.json", "environment": "client" }
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*",
+		"geckolib": ">=5.5"
+	}
+}

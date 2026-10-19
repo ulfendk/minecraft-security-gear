@@ -1,0 +1,12 @@
+{
+	"schemaVersion": 1,
+	"id": "secgear-test",
+	"version": "1.0.0",
+	"name": "Security Gear tests",
+	"environment": "*",
+	"entrypoints": {
+		"fabric-gametest": ["dk.ulfen.security.test.SecGameTests"],
+		"fabric-client-gametest": ["dk.ulfen.security.test.SecClientGameTest"]
+	},
+	"depends": { "secgear": "*" }
+}
