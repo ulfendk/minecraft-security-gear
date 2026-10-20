@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.1.2] - 2026-10-20
+- Bedrock: security cameras can now be interacted with, so the Camera Linker can store them, and sneaking with an empty hand starts or stops the panning. On touch screens, a button shows up when you hold the linker or sneak.
+
 ## [0.1.1] - 2026-10-20
 - Java: the Camera Linker now links cameras when you use it on a monitor. Before, the monitor ignored the linker and tried to show its (missing) cameras instead.
 

@@ -24,6 +24,8 @@ export const MESSAGES = {
   'monitor.pick': { en_US: 'Choose a camera', da_DK: 'Vælg et kamera' },
   'monitor.camera': { en_US: 'Camera %s', da_DK: 'Kamera %s' },
   'camera.panning': { en_US: 'Camera is panning', da_DK: 'Kameraet panorerer' },
+  'camera.link': { en_US: 'Store camera', da_DK: 'Gem kamera' },
+  'camera.toggle': { en_US: 'Start/stop panning', da_DK: 'Start/stop panorering' },
   'camera.still': { en_US: 'Camera holds still', da_DK: 'Kameraet står stille' },
   'reader.level': { en_US: 'Required clearance: %s', da_DK: 'Krævet adgangsniveau: %s' },
   'reader.granted': { en_US: 'Access granted', da_DK: 'Adgang tilladt' },

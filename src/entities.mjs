@@ -128,6 +128,13 @@ function cameraEntity() {
         'minecraft:persistent': {},
         'minecraft:nameable': {},
         'minecraft:fire_immune': {},
+        // Makes the camera interactable, so the script's playerInteractWithEntity fires (and touch shows a button).
+        'minecraft:interact': {
+          interactions: [
+            { on_interact: { filters: { test: 'has_equipment', subject: 'other', domain: 'hand', value: `${NS}:camera_linker` } }, interact_text: `${NS}.camera.link` },
+            { on_interact: { filters: { test: 'is_sneaking', subject: 'other' } }, interact_text: `${NS}.camera.toggle` },
+          ],
+        },
         'minecraft:loot': { table: `loot_tables/entities/${NS}_security_camera.json` },
         'minecraft:damage_sensor': {
           triggers: [
