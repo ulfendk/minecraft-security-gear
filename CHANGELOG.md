@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.3] - 2026-10-20
+- Bedrock: sneak and use a camera with anything but the linker in your hand to start or stop its panning, matching the button shown on touch screens.
+- The Bedrock self test keeps its test animals still, so the laser and motion sensor checks no longer fail at random.
+
 ## [0.1.2] - 2026-10-20
 - Bedrock: security cameras can now be interacted with, so the Camera Linker can store them, and sneaking with an empty hand starts or stops the panning. On touch screens, a button shows up when you hold the linker or sneak.
 

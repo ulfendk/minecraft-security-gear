@@ -43,7 +43,7 @@ const linked = (item) => {
   try { return JSON.parse(item.getDynamicProperty(`${NS}:cameras`) ?? '[]'); } catch { return []; }
 };
 
-/** Linker used on a camera: remember it. Sneak with an empty hand: toggle panning. */
+/** Linker used on a camera: remember it. Sneak with anything else: toggle panning. */
 export function onInteractEntity({ player, target, itemStack }) {
   if (target?.typeId !== CAMERA) return;
   if (itemStack?.typeId === `${NS}:camera_linker`) {
@@ -56,7 +56,7 @@ export function onInteractEntity({ player, target, itemStack }) {
     player.playSound('random.orb');
     return tell(player, 'linker.added', list.length);
   }
-  if (!itemStack && player.isSneaking) {
+  if (player.isSneaking) {
     const still = !target.getProperty(`${NS}:still`);
     target.setProperty(`${NS}:still`, still);
     tell(player, still ? 'camera.still' : 'camera.panning');

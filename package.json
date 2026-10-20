@@ -1,6 +1,6 @@
 {
   "name": "security-gear",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Security Gear: security cameras with live monitors, lasers, bombs, pit traps, prison walls, winding bridges and guard towers for Minecraft",
   "private": true,
   "type": "module",

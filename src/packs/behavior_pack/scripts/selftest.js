@@ -23,9 +23,11 @@ async function run() {
   set(4, Y, 4, `${NS}:laser_emitter`, { 'minecraft:block_face': 'east' });
   set(10, Y, 4, `${NS}:laser_receiver`, { 'minecraft:block_face': 'west' });
   const cow = dim.spawnEntity('minecraft:cow', { x: 7.5, y: Y, z: 4.5 });
+  // Keep the cow in the beam; left alone it can wander out before the check.
+  cow.addEffect('slowness', 200, { amplifier: 255, showParticles: false });
   // Motion sensor looking east at a pig.
   set(4, Y, 8, `${NS}:motion_sensor`, { 'minecraft:block_face': 'east' });
-  dim.spawnEntity('minecraft:pig', { x: 7.5, y: Y, z: 8.5 });
+  dim.spawnEntity('minecraft:pig', { x: 7.5, y: Y, z: 8.5 }).addEffect('slowness', 200, { amplifier: 255, showParticles: false });
   // Winding bridge, powered by a redstone block.
   set(4, Y, 12, `${NS}:bridge_winch`, { 'minecraft:cardinal_direction': 'east' });
   set(3, Y, 12, 'minecraft:redstone_block');
