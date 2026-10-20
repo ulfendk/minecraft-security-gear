@@ -64,6 +64,8 @@ public class MonitorBlock extends BaseEntityBlock {
 
 	@Override
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+		// Vanilla calls this even with an item in hand; let the Camera Linker handle its own use.
+		if (player.getMainHandItem().is(SecRegistry.CAMERA_LINKER)) return InteractionResult.PASS;
 		if (level.isClientSide() || !(level.getBlockEntity(pos) instanceof MonitorBlockEntity monitor)) return InteractionResult.SUCCESS;
 		monitor.prune(p -> level.getBlockState(p).is(SecRegistry.SECURITY_CAMERA));
 		int count = monitor.cameras().size();

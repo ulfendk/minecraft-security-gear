@@ -2,6 +2,7 @@ package dk.ulfen.security.block;
 
 import java.util.Map;
 
+import dk.ulfen.security.SecRegistry;
 import dk.ulfen.security.blockentity.CameraBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -66,7 +67,7 @@ public class CameraBlock extends BaseEntityBlock {
 
 	@Override
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-		if (!player.isShiftKeyDown()) return InteractionResult.PASS;
+		if (!player.isShiftKeyDown() || player.getMainHandItem().is(SecRegistry.CAMERA_LINKER)) return InteractionResult.PASS;
 		if (!level.isClientSide() && level.getBlockEntity(pos) instanceof CameraBlockEntity cam) {
 			cam.setStill(!cam.isStill());
 			player.sendOverlayMessage(Component.translatable(cam.isStill() ? "secgear.camera.still" : "secgear.camera.panning"));

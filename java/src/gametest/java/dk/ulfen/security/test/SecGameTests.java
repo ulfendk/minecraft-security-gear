@@ -3,6 +3,7 @@ package dk.ulfen.security.test;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -17,6 +18,7 @@ import dk.ulfen.security.block.MotionSensorBlock;
 import dk.ulfen.security.block.PitTrapdoorBlock;
 import dk.ulfen.security.block.TimedBombBlock;
 import dk.ulfen.security.block.TripwireBombBlock;
+import dk.ulfen.security.blockentity.MonitorBlockEntity;
 import dk.ulfen.security.entity.SecurityGuard;
 import dk.ulfen.security.structure.Blueprints;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
@@ -25,14 +27,19 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 
 /** Server-side checks run by `./gradlew runGameTest` (and in CI). */
 public class SecGameTests {
@@ -141,6 +148,25 @@ public class SecGameTests {
 		helper.assertBlockProperty(pos, KeycardReaderBlock.POWERED, false);
 		helper.assertTrue(reader.swipe(helper.getLevel(), abs, helper.getBlockState(pos), null, 3), "warden card refused");
 		helper.succeedWhen(() -> helper.assertBlockProperty(pos, KeycardReaderBlock.POWERED, true));
+	}
+
+	/** A Camera Linker used on a camera and then a monitor, through the real click path, links them. */
+	@GameTest(maxTicks = 1)
+	public void linkerLinksCameraToMonitor(GameTestHelper helper) {
+		BlockPos cam = new BlockPos(1, 1, 1), monitor = new BlockPos(3, 1, 1);
+		helper.setBlock(cam, SecRegistry.SECURITY_CAMERA);
+		helper.setBlock(monitor, SecRegistry.MONITOR);
+		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		ItemStack linker = new ItemStack(SecRegistry.CAMERA_LINKER);
+		player.setItemInHand(InteractionHand.MAIN_HAND, linker);
+		for (BlockPos pos : new BlockPos[] {cam, monitor}) {
+			BlockPos abs = helper.absolutePos(pos);
+			player.gameMode.useItemOn(player, helper.getLevel(), player.getMainHandItem(), InteractionHand.MAIN_HAND,
+					new BlockHitResult(Vec3.atCenterOf(abs), Direction.UP, abs, false));
+		}
+		helper.assertTrue(helper.getBlockEntity(monitor, MonitorBlockEntity.class).cameras().equals(List.of(helper.absolutePos(cam))),
+				"monitor not linked to the camera");
+		helper.succeed();
 	}
 
 	/** The motion sensor sees a pig in front of it. */

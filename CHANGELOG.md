@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.1.1] - 2026-10-20
+- Java: the Camera Linker now links cameras when you use it on a monitor. Before, the monitor ignored the linker and tried to show its (missing) cameras instead.
+
 ## [0.1.0] - 2026-10-19
 First release, for Bedrock and Java (Fabric):
 - Security cameras that pan from side to side, a Camera Linker, and monitors. On Java the monitor shows the camera's live picture; on both editions you can look through the camera.
