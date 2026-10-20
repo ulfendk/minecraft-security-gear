@@ -74,6 +74,14 @@ const T = {
     bedrock: 'Bedrock Edition', bedrockHow: 'Download the .mcaddon and open it. Then turn on Security Gear under Behavior Packs for your world.',
     java: 'Java Edition (Fabric)', javaHow: 'Put the .jar in your mods folder with Fabric API and GeckoLib (Minecraft 26.3).',
     download: 'Download', latest: 'Latest version', released: 'released', source: 'Source code', other: 'Dansk',
+    upgrade: 'Upgrading to a new version',
+    upgradeSteps: [
+      '<strong>Download the new version</strong> and open the file. A newer version replaces the one you have, and your worlds use it the next time you load them.',
+      '<strong>Still running the old version?</strong> (or Minecraft says it is already installed): go to <em>Settings → Storage</em>, delete Security Gear under both <em>Resource Packs</em> and <em>Behavior Packs</em>, then open the new file again.',
+      '<strong>Check the world:</strong> in the world\'s <em>Edit</em> screen, under <em>Behavior Packs</em> and <em>Resource Packs</em>, make sure Security Gear is active. A world you imported or downloaded can carry its own old copy: deactivate it there, save, and activate the new one.',
+    ],
+    upgradeServer: 'On a server, replace the add-on\'s folders in <em>behavior_packs</em> and <em>resource_packs</em> with the new ones and restart it.',
+    upgradeJava: 'Delete the old Security Gear jar from your <em>mods</em> folder and put the new one in its place. Keep only one version in the folder. If the new version needs a newer Fabric API or GeckoLib, update those too.',
   },
   da: {
     title: 'Sikkerhedsudstyr til Minecraft',
@@ -81,6 +89,14 @@ const T = {
     bedrock: 'Bedrock Edition', bedrockHow: 'Hent .mcaddon-filen og åbn den. Slå derefter Security Gear til under Adfærdspakker for din verden.',
     java: 'Java Edition (Fabric)', javaHow: 'Læg .jar-filen i din mods-mappe sammen med Fabric API og GeckoLib (Minecraft 26.3).',
     download: 'Hent', latest: 'Nyeste version', released: 'udgivet', source: 'Kildekode', other: 'English',
+    upgrade: 'Opdatering til en ny version',
+    upgradeSteps: [
+      '<strong>Hent den nye version</strong>, og åbn filen. En nyere version erstatter den, du har, og dine verdener bruger den, næste gang du åbner dem.',
+      '<strong>Kører den gamle version stadig?</strong> (eller siger Minecraft, at den allerede er installeret): Gå til <em>Indstillinger → Lagerplads</em>, slet Security Gear under både <em>Ressourcepakker</em> og <em>Adfærdspakker</em>, og åbn så den nye fil igen.',
+      '<strong>Tjek verdenen:</strong> Sørg for, at Security Gear er slået til under <em>Adfærdspakker</em> og <em>Ressourcepakker</em>, når du redigerer verdenen. En verden, du har importeret eller hentet, kan have sin egen gamle kopi med: Slå den fra dér, gem, og slå den nye til.',
+    ],
+    upgradeServer: 'På en server skal du erstatte tilføjelsens mapper i <em>behavior_packs</em> og <em>resource_packs</em> med de nye og genstarte den.',
+    upgradeJava: 'Slet den gamle Security Gear-jar fra din <em>mods</em>-mappe, og læg den nye i stedet. Hav kun én version i mappen. Kræver den nye version en nyere Fabric API eller GeckoLib, så opdatér dem også.',
   },
 };
 
@@ -213,7 +229,17 @@ footer a { color: var(--accent); }
     <p class="version" id="version">${esc(t.latest)}: <strong>${esc(version)}</strong></p>
   </div>
 </header>
-<main class="wrap">${sections}
+<main class="wrap">
+    <section>
+      <h2>${esc(t.upgrade)}</h2>
+      <h3>${esc(t.bedrock)}</h3>
+      <ol>${t.upgradeSteps.map((step) => `
+        <li>${step}</li>`).join('')}
+      </ol>
+      <p>${t.upgradeServer}</p>
+      <h3>${esc(t.java)}</h3>
+      <p>${t.upgradeJava}</p>
+    </section>${sections}
 </main>
 <footer><a href="https://github.com/${repo}">${esc(t.source)}</a> · MIT</footer>
 <script>
