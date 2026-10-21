@@ -1,10 +1,10 @@
 // Box-UV models (Bedrock geometry, read as-is by GeckoLib on Java): the security
-// camera, the searchlight, the security guard and the guard dog.
+// camera, the searchlight, the security guard, the criminals and the guard dog.
 // Coordinates: pixels, y up, the model faces north (-z), +x is the model's left.
 import { quadruped } from './lib/anim.mjs';
 import { felid } from './lib/bodies.mjs';
 import { all, bone, face, LEGS, notFace } from './lib/parts.mjs';
-import { fur, gradient, mottle, region, underside } from './lib/texture.mjs';
+import { fur, gradient, mottle, region, TRANSPARENT, underside } from './lib/texture.mjs';
 
 const r = (n) => Math.round(n * 100) / 100;
 
@@ -237,6 +237,115 @@ export const guard = {
   egg: ['#2f4a7a', '#e8c547'],
 };
 
+// ---------------------------------------------------------------- criminals
+
+/**
+ * Guard-shaped body without the cap and baton. `hat` is a head overlay (like the
+ * player's hat layer) and `crown`/`brim` make a fedora; each outfit paints them
+ * or leaves them transparent.
+ */
+function criminalModel() {
+  const face = [
+    { face: 'front', x: 1, y: 4, w: 2, h: 1, color: '#f2f2f2' },
+    { face: 'front', x: 5, y: 4, w: 2, h: 1, color: '#f2f2f2' },
+    { face: 'front', x: 2, y: 4, color: '#3a2a20' },
+    { face: 'front', x: 5, y: 4, color: '#3a2a20' },
+    { face: 'front', x: 1, y: 3, w: 2, h: 1, color: '#2a1d16' }, // brows
+    { face: 'front', x: 5, y: 3, w: 2, h: 1, color: '#2a1d16' },
+    { face: 'front', x: 3, y: 6, w: 2, h: 1, color: '#7a4a3a' }, // mouth
+  ];
+  return {
+    bones: [
+      { name: 'root', pivot: [0, 0, 0] },
+      { name: 'body', parent: 'root', pivot: [0, 24, 0], cubes: [{ origin: [-4, 12, -2], size: [8, 12, 4], mat: 'shirt' }] },
+      { name: 'head', parent: 'body', pivot: [0, 24, 0], cubes: [{ origin: [-4, 24, -4], size: [8, 8, 8], mat: 'head', marks: face }] },
+      {
+        name: 'hat', parent: 'head', pivot: [0, 32, 0],
+        cubes: [
+          { origin: [-4, 24, -4], size: [8, 8, 8], mat: 'hat', inflate: 0.5 },
+          { origin: [-6, 30, -6], size: [12, 1, 12], mat: 'brim' },
+          { origin: [-3, 32, -3], size: [6, 2, 6], mat: 'crown', inflate: 0.25 },
+        ],
+      },
+      { name: 'arm_r', parent: 'body', pivot: [-6, 22, 0], cubes: [{ origin: [-8, 12, -2], size: [4, 12, 4], mat: 'sleeve' }] },
+      { name: 'arm_l', parent: 'body', pivot: [6, 22, 0], cubes: [{ origin: [4, 12, -2], size: [4, 12, 4], mat: 'sleeve' }] },
+      { name: 'leg_r', parent: 'root', pivot: [-2, 12, 0], cubes: [{ origin: [-4, 0, -2], size: [4, 12, 4], mat: 'trousers' }] },
+      { name: 'leg_l', parent: 'root', pivot: [2, 12, 0], cubes: [{ origin: [0, 0, -2], size: [4, 12, 4], mat: 'trousers' }] },
+    ],
+  };
+}
+
+const T = TRANSPARENT;
+const CRIMINAL_SKIN = '#c99a78'; // one neutral tone for every outfit
+/** Hair on top, a fringe along the front's top row, and down the sides and back. */
+const hair = (color, low = 29) => region(color, ({ p, face: f, j }) => f === 'top' || (f === 'front' ? j === 0 : f !== 'bottom' && p[1] > (f === 'back' ? low - 3 : low)));
+const bands = (color, { size = 2, axis = 1 } = {}) => region(color, ({ p }) => Math.floor(p[axis] / size) % 2 === 0);
+const shoes = (color) => region(color, ({ p }) => p[1] < 2);
+
+/** Four outfits: striped convict, orange jumpsuit, masked burglar and pinstriped gangster. */
+const OUTFITS = [
+  {
+    skin: CRIMINAL_SKIN, hairColor: '#4a3020',
+    shirt: { base: '#efe9da', layers: [bands('#26262a'), region('#ffffff', ({ face: f, i, j }) => f === 'front' && i >= 1 && i <= 3 && j >= 2 && j <= 3), region('#26262a', ({ face: f, i, j }) => f === 'front' && j === 3 && (i === 1 || i === 3))] },
+    sleeve: { base: '#efe9da', layers: [bands('#26262a')] },
+    trousers: { base: '#efe9da', layers: [bands('#26262a'), shoes('#2a2420')] },
+    hat: { base: T, layers: [bands('#26262a', { size: 1 }), region(T, ({ p }) => p[1] < 30)] }, // pillbox cap
+    hatBase: '#efe9da',
+  },
+  {
+    skin: CRIMINAL_SKIN, hairColor: '#17110d',
+    shirt: { base: '#e8742a', layers: [region('#1d1d1f', ({ face: f, i, j }) => f === 'back' && j >= 2 && j <= 3 && i >= 1 && i <= 6 && (i + j) % 3), mottle(0.05)] },
+    sleeve: { base: '#e8742a', layers: [mottle(0.05)] },
+    trousers: { base: '#e8742a', layers: [shoes('#e6e6e6'), mottle(0.05)] },
+  },
+  {
+    skin: CRIMINAL_SKIN, hairColor: '#8a4a22',
+    // Eye mask across the brows and eyes.
+    mask: region('#141416', ({ face: f, j, i }) => (f === 'front' && j >= 3 && j <= 4) || ((f === 'left' || f === 'right') && j >= 3 && j <= 4 && i >= 6)),
+    shirt: { base: '#f0f0f0', layers: [bands('#1d1d1f', { size: 1 })] },
+    sleeve: { base: '#f0f0f0', layers: [bands('#1d1d1f', { size: 1 })] },
+    trousers: { base: '#1f1f22', layers: [shoes('#3b2a1e'), mottle(0.05)] },
+    hat: { base: T, layers: [region('#1f1f22', ({ p }) => p[1] > 28.5), region('#2c2c30', ({ p }) => p[1] > 28.5 && p[1] < 29.5)] }, // beanie
+  },
+  {
+    skin: CRIMINAL_SKIN, hairColor: '#120d0a',
+    shirt: {
+      base: '#2b2d33',
+      layers: [
+        region('#4a4d55', ({ i }) => i % 3 === 0),
+        region('#f2f2f2', ({ face: f, i, j }) => f === 'front' && i >= 2 && i <= 5 && j <= 1), // shirt collar
+        region('#a51d24', ({ face: f, i, j }) => f === 'front' && i >= 3 && i <= 4 && j <= 7), // tie
+      ],
+    },
+    sleeve: { base: '#2b2d33', layers: [region('#4a4d55', ({ i }) => i % 3 === 0)] },
+    trousers: { base: '#2b2d33', layers: [region('#4a4d55', ({ i }) => i % 3 === 0), shoes('#141414')] },
+    hat: { base: T, layers: [region('#1b1b1f', ({ p }) => p[1] > 30.5)] },
+    brim: '#1b1b1f',
+    crown: { base: '#1b1b1f', layers: [region('#7a1d1d', ({ p, face: f }) => f !== 'top' && p[1] < 32.6)] },
+  },
+];
+
+function criminalMaterials(o) {
+  return {
+    head: { base: o.skin, layers: [hair(o.hairColor), ...(o.mask ? [o.mask] : [])] },
+    hat: o.hat ? { ...o.hat, base: o.hatBase ?? o.hat.base } : T,
+    brim: o.brim ?? T,
+    crown: o.crown ?? T,
+    shirt: o.shirt,
+    sleeve: { ...o.sleeve, layers: [...o.sleeve.layers, hands(o.skin)] },
+    trousers: o.trousers,
+  };
+}
+
+export const criminal = {
+  id: 'criminal',
+  model: criminalModel(),
+  materials: criminalMaterials(OUTFITS[0]),
+  variants: OUTFITS.map((o, i) => ({ texture: i === 0 ? null : `outfit${i}`, materials: criminalMaterials(o) })),
+  anims: bipedAnims(),
+  egg: ['#e8742a', '#26262a'],
+};
+
 // ---------------------------------------------------------------- guard dog
 
 function dogModel() {
@@ -274,5 +383,5 @@ export const dog = {
   egg: ['#b98446', '#2b2420'],
 };
 
-export const ENTITY_MODELS = [camera, searchlight, guard, dog];
+export const ENTITY_MODELS = [camera, searchlight, guard, criminal, dog];
 export { face, notFace };

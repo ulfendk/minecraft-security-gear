@@ -199,7 +199,7 @@ export async function build({ quiet = false } = {}) {
   const ent = bedrockEntities();
   for (const [p, body] of Object.entries(ent.bp)) await write(join(BP, p), body);
   for (const [p, body] of Object.entries(ent.rp)) await write(join(RP, p), body);
-  for (const id of ['security_guard', 'guard_dog', 'security_camera']) {
+  for (const id of ['security_guard', 'criminal', 'guard_dog', 'security_camera']) {
     const m = models[id];
     await write(join(RP, 'models', 'entity', `${id}.geo.json`), m.geometry);
     await write(join(RP, 'textures', 'entity', NS, `${id}.png`), m.texture);
@@ -332,7 +332,7 @@ export async function build({ quiet = false } = {}) {
   // Java edition
   await buildJava({ blocks, items, models, icon, OUT: join(ROOT, 'java', 'src', 'generated', 'resources') });
 
-  if (!quiet) console.log(`Built ${blocks.length} blocks, ${items.length} items and 3 entities (Bedrock packs in build/, Java resources in java/src/generated/resources)`);
+  if (!quiet) console.log(`Built ${blocks.length} blocks, ${items.length} items and ${Object.keys(ent.bp).filter((p) => p.startsWith("entities/")).length} entities (Bedrock packs in build/, Java resources in java/src/generated/resources)`);
   return { version: pkg.version, models };
 }
 

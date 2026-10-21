@@ -48,7 +48,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 /** Patrols around the spot where it was spawned and fights hostile mobs. Friendly unless you hit it. */
-public class SecurityGuard extends PathfinderMob implements GeoEntity {
+public class SecurityGuard extends PathfinderMob implements GeoEntity, HasVariant {
 	private static final EntityDataAccessor<Integer> VARIANT = SynchedEntityData.defineId(SecurityGuard.class, EntityDataSerializers.INT);
 	public static final int VARIANTS = 3, PATROL_RADIUS = 16;
 	private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("animation.secgear.security_guard.idle");
@@ -91,6 +91,7 @@ public class SecurityGuard extends PathfinderMob implements GeoEntity {
 		builder.define(VARIANT, 0);
 	}
 
+	@Override
 	public int getVariant() {
 		return this.entityData.get(VARIANT);
 	}

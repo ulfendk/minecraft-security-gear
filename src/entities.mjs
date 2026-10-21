@@ -1,7 +1,7 @@
 // Bedrock entity definitions (behavior + client) for the security guard, the
-// guard dog and the security camera. On Java these are hand-written classes.
+// criminals, the guard dog and the security camera. On Java these are hand-written classes.
 import { NS } from './lib/constants.mjs';
-import { camera, dog, guard } from './models.mjs';
+import { camera, criminal, dog, guard } from './models.mjs';
 
 const anim = (id, name) => `animation.${NS}.${id}.${name}`;
 const monsters = { any_of: [{ test: 'is_family', subject: 'other', value: 'monster' }] };
@@ -45,6 +45,50 @@ function guardEntity() {
       events: {
         'minecraft:entity_spawned': {
           randomize: guard.variants.map((_, i) => ({ weight: 1, add: { component_groups: [`${NS}:variant_${i}`] } })),
+        },
+      },
+    },
+  };
+}
+
+/** Shuffles about, keeps away from guard dogs and hits back when hit. Guards leave criminals alone. */
+function criminalEntity() {
+  const variants = Object.fromEntries(criminal.variants.map((_, i) => [`${NS}:variant_${i}`, { 'minecraft:variant': { value: i } }]));
+  return {
+    format_version: '1.21.90',
+    'minecraft:entity': {
+      description: { identifier: `${NS}:criminal`, spawn_category: 'creature', is_spawnable: true, is_summonable: true },
+      component_groups: variants,
+      components: {
+        'minecraft:type_family': { family: ['criminal', 'mob'] },
+        'minecraft:collision_box': { width: 0.6, height: 1.95 },
+        'minecraft:health': { value: 20, max: 20 },
+        'minecraft:movement': { value: 0.25 },
+        'minecraft:navigation.walk': { can_path_over_water: true, avoid_damage_blocks: true },
+        'minecraft:movement.basic': {},
+        'minecraft:jump.static': {},
+        'minecraft:can_climb': {},
+        'minecraft:physics': {},
+        'minecraft:pushable': { is_pushable: true, is_pushable_by_piston: true },
+        'minecraft:nameable': {},
+        'minecraft:leashable': {},
+        'minecraft:persistent': {},
+        'minecraft:attack': { damage: 3 },
+        'minecraft:conditional_bandwidth_optimization': {},
+        'minecraft:behavior.float': { priority: 0 },
+        'minecraft:behavior.hurt_by_target': { priority: 1 },
+        'minecraft:behavior.melee_attack': { priority: 2, speed_multiplier: 1.1, track_target: true },
+        'minecraft:behavior.avoid_mob_type': {
+          priority: 3,
+          entity_types: [{ filters: { test: 'is_family', subject: 'other', value: 'guard_dog' }, max_dist: 6, walk_speed_multiplier: 1.0, sprint_speed_multiplier: 1.3 }],
+        },
+        'minecraft:behavior.random_stroll': { priority: 7, speed_multiplier: 0.6, xz_dist: 4 },
+        'minecraft:behavior.look_at_player': { priority: 8, look_distance: 8, probability: 0.1 },
+        'minecraft:behavior.random_look_around': { priority: 9 },
+      },
+      events: {
+        'minecraft:entity_spawned': {
+          randomize: criminal.variants.map((_, i) => ({ weight: 1, add: { component_groups: [`${NS}:variant_${i}`] } })),
         },
       },
     },
@@ -196,39 +240,43 @@ export function bedrockEntities() {
   const files = { bp: {}, rp: {} };
   const ctrl = (id, controllers) => ({ format_version: '1.10.0', animation_controllers: controllers });
 
-  // Guard
-  files.bp[`entities/security_guard.json`] = guardEntity();
-  const guardTextures = { default: `textures/entity/${NS}/security_guard` };
-  guard.variants.forEach((v, i) => { if (i) guardTextures[`skin${i}`] = `textures/entity/${NS}/security_guard_skin${i}`; });
-  files.rp[`entity/security_guard.entity.json`] = clientEntity(guard, {
-    textures: guardTextures,
-    animations: {
-      ...Object.fromEntries(Object.keys(guard.anims).map((n) => [n, anim('security_guard', n)])),
-      look_at_target: `animation.${NS}.common.look_at_target`,
-      move_controller: `controller.animation.${NS}.security_guard.move`,
-      attack_controller: `controller.animation.${NS}.security_guard.attack`,
-    },
-    animate: ['move_controller', 'attack_controller', 'look_at_target'],
-    renderController: `controller.render.${NS}.security_guard`,
-    egg: guard.egg,
-  });
-  files.rp[`animation_controllers/security_guard.animation_controllers.json`] = ctrl('security_guard', {
-    [`controller.animation.${NS}.security_guard.move`]: moveController('security_guard', [
-      ['running', 'run', 'query.ground_speed > 4.5'], ['walking', 'walk', 'query.ground_speed > 0.4'],
-    ]),
-    [`controller.animation.${NS}.security_guard.attack`]: attackController,
-  });
-  files.rp[`render_controllers/security_guard.render_controllers.json`] = {
-    format_version: '1.8.0',
-    render_controllers: {
-      [`controller.render.${NS}.security_guard`]: {
-        arrays: { textures: { 'Array.skins': ['Texture.default', ...guard.variants.slice(1).map((_, i) => `Texture.skin${i + 1}`)] } },
-        geometry: 'Geometry.default',
-        materials: [{ '*': 'Material.default' }],
-        textures: ['Array.skins[query.variant]'],
+  // Guard and criminals: two-legged, with texture variants.
+  for (const [spec, entity] of [[guard, guardEntity()], [criminal, criminalEntity()]]) {
+    const id = spec.id;
+    files.bp[`entities/${id}.json`] = entity;
+    const textures = { default: `textures/entity/${NS}/${id}` };
+    const extra = spec.variants.slice(1).map((v) => v.texture);
+    for (const t of extra) textures[t] = `textures/entity/${NS}/${id}_${t}`;
+    files.rp[`entity/${id}.entity.json`] = clientEntity(spec, {
+      textures,
+      animations: {
+        ...Object.fromEntries(Object.keys(spec.anims).map((n) => [n, anim(id, n)])),
+        look_at_target: `animation.${NS}.common.look_at_target`,
+        move_controller: `controller.animation.${NS}.${id}.move`,
+        attack_controller: `controller.animation.${NS}.${id}.attack`,
       },
-    },
-  };
+      animate: ['move_controller', 'attack_controller', 'look_at_target'],
+      renderController: `controller.render.${NS}.${id}`,
+      egg: spec.egg,
+    });
+    files.rp[`animation_controllers/${id}.animation_controllers.json`] = ctrl(id, {
+      [`controller.animation.${NS}.${id}.move`]: moveController(id, [
+        ['running', 'run', 'query.ground_speed > 4.5'], ['walking', 'walk', 'query.ground_speed > 0.4'],
+      ]),
+      [`controller.animation.${NS}.${id}.attack`]: attackController,
+    });
+    files.rp[`render_controllers/${id}.render_controllers.json`] = {
+      format_version: '1.8.0',
+      render_controllers: {
+        [`controller.render.${NS}.${id}`]: {
+          arrays: { textures: { 'Array.variants': ['Texture.default', ...extra.map((t) => `Texture.${t}`)] } },
+          geometry: 'Geometry.default',
+          materials: [{ '*': 'Material.default' }],
+          textures: ['Array.variants[query.variant]'],
+        },
+      },
+    };
+  }
 
   // Dog
   files.bp[`entities/guard_dog.json`] = dogEntity();
@@ -285,6 +333,7 @@ export function bedrockEntities() {
     entity_sounds: {
       entities: {
         [`${NS}:security_guard`]: { volume: 1, pitch: [0.9, 1.1], events: { hurt: 'game.player.hurt', death: 'game.player.die' } },
+        [`${NS}:criminal`]: { volume: 1, pitch: [0.9, 1.1], events: { hurt: 'game.player.hurt', death: 'game.player.die' } },
         [`${NS}:guard_dog`]: { volume: 1, pitch: [0.9, 1.1], events: { ambient: 'mob.wolf.bark', hurt: 'mob.wolf.hurt', death: 'mob.wolf.death' } },
       },
     },

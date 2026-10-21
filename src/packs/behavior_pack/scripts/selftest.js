@@ -78,6 +78,8 @@ async function run() {
     const r = buildStructure(dim, name, { x: 2 + i * 14, y: Y, z: 40 }, 'north');
     check(`blueprint_${name}`, r.ok && r.placed > 20, `(${r.placed} blocks)`);
   }
+  const inmates = dim.getEntities({ type: `${NS}:criminal`, location: { x: 16, y: Y, z: 40 }, maxDistance: 10 });
+  check('prison_cell_inmate', inmates.length === 1, `(${inmates.length} criminals, outfit ${inmates[0]?.getComponent('minecraft:variant')?.value})`);
 
   // Timed bomb on a 5 second fuse, armed by redstone.
   set(24, Y, 24, `${NS}:timed_bomb`, { [`${NS}:timer`]: 0 });

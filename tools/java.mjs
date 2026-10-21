@@ -10,7 +10,7 @@ import { eggIcon } from '../src/lib/texture.mjs';
 import { TEXTURES } from '../src/blocks.mjs';
 import { BLOCK_ICONS } from '../src/items.mjs';
 import { javaLang, LOCALES } from '../src/lang.mjs';
-import { dog, guard } from '../src/models.mjs';
+import { criminal, dog, guard } from '../src/models.mjs';
 import { structureData } from '../src/structures.mjs';
 
 // Recipes are written with Bedrock item ids; these differ on Java.
@@ -95,8 +95,8 @@ export async function buildJava({ blocks, items, models, icon, OUT }) {
   }
   await write(join(A, 'textures', 'block', 'searchlight_lit.png'), models.searchlight.litTexture);
 
-  // GeckoLib entities: the guard (with skin variants) and the dog.
-  for (const [spec, id] of [[guard, 'security_guard'], [dog, 'guard_dog']]) {
+  // GeckoLib entities: the guard (with skin variants), the criminals (with outfits) and the dog.
+  for (const [spec, id] of [[guard, 'security_guard'], [criminal, 'criminal'], [dog, 'guard_dog']]) {
     await write(join(A, 'geckolib', 'models', 'entity', `${id}.geo.json`), models[id].geometry);
     await write(join(A, 'geckolib', 'animations', 'entity', `${id}.animation.json`), models[id].anims);
     await write(join(A, 'textures', 'entity', `${id}.png`), models[id].texture);

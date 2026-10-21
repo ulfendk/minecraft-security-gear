@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.0] - 2026-10-21
+- Criminals to put in your prison, on both editions: a striped convict, an inmate in an orange jumpsuit, a masked burglar and a gangster in a pinstripe suit. They shuffle about, keep away from guard dogs and hit back when hit. Guards leave them alone. Spawn them with the Criminal spawn egg.
+- The prison cell blueprint now comes with a criminal inside.
+
 ## [0.1.3] - 2026-10-20
 - Bedrock: sneak and use a camera with anything but the linker in your hand to start or stop its panning, matching the button shown on touch screens.
 - The Bedrock self test keeps its test animals still, so the laser and motion sensor checks no longer fail at random.

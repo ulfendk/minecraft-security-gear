@@ -24,6 +24,7 @@ import dk.ulfen.security.blockentity.SearchlightBlockEntity;
 import dk.ulfen.security.blockentity.TimedBombBlockEntity;
 import dk.ulfen.security.blockentity.WinchBlockEntity;
 import dk.ulfen.security.entity.CameraView;
+import dk.ulfen.security.entity.Criminal;
 import dk.ulfen.security.entity.GuardDog;
 import dk.ulfen.security.entity.SecurityGuard;
 import dk.ulfen.security.item.BatonItem;
@@ -81,13 +82,14 @@ public final class SecRegistry {
 
 	// Entities
 	public static EntityType<SecurityGuard> SECURITY_GUARD;
+	public static EntityType<Criminal> CRIMINAL;
 	public static EntityType<GuardDog> GUARD_DOG;
 	public static EntityType<CameraView> CAMERA_VIEW;
 
 	// Items
 	public static Item CAMERA_LINKER, GUARD_KEYCARD, OFFICER_KEYCARD, WARDEN_KEYCARD, BATON;
 	public static Item GUARD_TOWER_BLUEPRINT, PRISON_CELL_BLUEPRINT, GATEHOUSE_BLUEPRINT;
-	public static Item SECURITY_GUARD_SPAWN_EGG, GUARD_DOG_SPAWN_EGG;
+	public static Item SECURITY_GUARD_SPAWN_EGG, CRIMINAL_SPAWN_EGG, GUARD_DOG_SPAWN_EGG;
 
 	/** Camera positions stored in a Camera Linker. */
 	public static final DataComponentType<List<BlockPos>> LINKED_CAMERAS = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE, id("linked_cameras"),
@@ -175,9 +177,11 @@ public final class SecRegistry {
 
 	private static void registerEntities() {
 		SECURITY_GUARD = entity("security_guard", EntityType.Builder.<SecurityGuard>of(SecurityGuard::new, MobCategory.CREATURE).sized(0.6F, 1.95F).clientTrackingRange(10));
+		CRIMINAL = entity("criminal", EntityType.Builder.<Criminal>of(Criminal::new, MobCategory.CREATURE).sized(0.6F, 1.95F).clientTrackingRange(10));
 		GUARD_DOG = entity("guard_dog", EntityType.Builder.<GuardDog>of(GuardDog::new, MobCategory.CREATURE).sized(0.7F, 0.9F).clientTrackingRange(10));
 		CAMERA_VIEW = entity("camera_view", EntityType.Builder.<CameraView>of(CameraView::new, MobCategory.MISC).noLootTable().noSave().sized(0.1F, 0.1F).clientTrackingRange(16).updateInterval(1));
 		FabricDefaultAttributeRegistry.register(SECURITY_GUARD, SecurityGuard.createAttributes());
+		FabricDefaultAttributeRegistry.register(CRIMINAL, Criminal.createAttributes());
 		FabricDefaultAttributeRegistry.register(GUARD_DOG, GuardDog.createAttributes());
 	}
 
@@ -198,6 +202,7 @@ public final class SecRegistry {
 		GATEHOUSE_BLUEPRINT = item("gatehouse_blueprint", p -> new BlueprintItem(p, "gatehouse"), new Item.Properties().stacksTo(16));
 		BATON = item("baton", BatonItem::new, new Item.Properties().sword(ToolMaterial.IRON, 2.0F, -2.2F).durability(250));
 		SECURITY_GUARD_SPAWN_EGG = item("security_guard_spawn_egg", SpawnEggItem::new, new Item.Properties().spawnEgg(SECURITY_GUARD));
+		CRIMINAL_SPAWN_EGG = item("criminal_spawn_egg", SpawnEggItem::new, new Item.Properties().spawnEgg(CRIMINAL));
 		GUARD_DOG_SPAWN_EGG = item("guard_dog_spawn_egg", SpawnEggItem::new, new Item.Properties().spawnEgg(GUARD_DOG));
 	}
 
@@ -210,7 +215,7 @@ public final class SecRegistry {
 					KEYCARD_READER, CELL_DOOR, PRISON_BARS, PRISON_WALL, REINFORCED_CONCRETE, BARBED_WIRE, RAZOR_WIRE, PIT_TRAPDOOR, BRIDGE_WINCH,
 					TIMED_BOMB, TRIPWIRE_BOMB}) out.accept(b);
 				for (Item i : new Item[] {CAMERA_LINKER, GUARD_KEYCARD, OFFICER_KEYCARD, WARDEN_KEYCARD, BATON, GUARD_TOWER_BLUEPRINT, PRISON_CELL_BLUEPRINT,
-					GATEHOUSE_BLUEPRINT, SECURITY_GUARD_SPAWN_EGG, GUARD_DOG_SPAWN_EGG}) out.accept(i);
+					GATEHOUSE_BLUEPRINT, SECURITY_GUARD_SPAWN_EGG, CRIMINAL_SPAWN_EGG, GUARD_DOG_SPAWN_EGG}) out.accept(i);
 			})
 			.build();
 		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, id("secgear"), tab);

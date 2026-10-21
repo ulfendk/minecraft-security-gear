@@ -27,6 +27,7 @@ const P = {
   C: { java: `${NS}:security_camera`, facing: 'east', bedrock: { camera: true }, link: 'camera' },
   X: { java: 'minecraft:lever', props: { face: 'floor' }, facing: 'east', bedrock: { id: 'minecraft:lever', facingState: 'lever' } },
   G: { spawn: `${NS}:security_guard` },
+  I: { spawn: `${NS}:criminal` },
 };
 
 const layers = (...ls) => ls;
@@ -46,7 +47,7 @@ export const structures = {
   prison_cell: {
     layers: layers(
       ['RRRRR', 'RRRRR', 'RRRRR', 'RRRRR', 'RRRRR', '.....'],
-      ['RRRRR', 'R   R', 'R   R', 'R   R', 'RBdRR', '...K.'],
+      ['RRRRR', 'R   R', 'R I R', 'R   R', 'RBdRR', '...K.'],
       ['RRRRR', 'R   R', 'R N R', 'R   R', 'RBuRR', '.....'],
       ['RRRRR', 'RRRRR', 'RRRRR', 'RRRRR', 'RRRRR', '.....'],
     ),

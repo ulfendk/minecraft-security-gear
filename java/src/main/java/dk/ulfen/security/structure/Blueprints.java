@@ -4,6 +4,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,16 +13,16 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import dk.ulfen.security.SecRegistry;
 import dk.ulfen.security.SecurityGear;
 import dk.ulfen.security.blockentity.MonitorBlockEntity;
-import dk.ulfen.security.entity.SecurityGuard;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Rotation;
@@ -113,12 +114,13 @@ public final class Blueprints {
 			if (!level.getBlockState(c.pos).canBeReplaced() || level.isOutsideBuildHeight(c.pos)) return -1;
 		}
 		Rotation rotation = rotationFor(facing);
-		List<BlockPos> placed = new ArrayList<>(), cameras = new ArrayList<>(), monitors = new ArrayList<>(), guards = new ArrayList<>();
+		List<BlockPos> placed = new ArrayList<>(), cameras = new ArrayList<>(), monitors = new ArrayList<>();
+		Map<BlockPos, String> spawns = new LinkedHashMap<>();
 		for (Cell c : cells) {
 			JsonObject entry = palette.has(String.valueOf(c.ch)) ? palette.getAsJsonObject(String.valueOf(c.ch)) : null;
 			if (c.ch == ' ' || entry == null || entry.has("spawn")) {
 				level.setBlock(c.pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
-				if (entry != null && entry.has("spawn")) guards.add(c.pos);
+				if (entry != null && entry.has("spawn")) spawns.put(c.pos, entry.get("spawn").getAsString());
 				continue;
 			}
 			level.setBlock(c.pos, stateFor(entry, rotation), Block.UPDATE_CLIENTS);
@@ -131,13 +133,13 @@ public final class Blueprints {
 			level.setBlock(p, Block.updateFromNeighbourShapes(s, level, p), Block.UPDATE_ALL);
 		}
 		for (BlockPos m : monitors) if (level.getBlockEntity(m) instanceof MonitorBlockEntity monitor) monitor.link(cameras);
-		for (BlockPos g : guards) {
-			SecurityGuard guard = SecRegistry.SECURITY_GUARD.create(level, EntitySpawnReason.STRUCTURE);
-			if (guard == null) continue;
-			guard.snapTo(g.getX() + 0.5, g.getY(), g.getZ() + 0.5, facing.toYRot(), 0);
-			guard.finalizeSpawn(level, level.getCurrentDifficultyAt(g), EntitySpawnReason.STRUCTURE, null);
-			level.addFreshEntity(guard);
-		}
+		spawns.forEach((pos, id) -> {
+			Entity entity = BuiltInRegistries.ENTITY_TYPE.getValue(Identifier.parse(id)).create(level, EntitySpawnReason.STRUCTURE);
+			if (entity == null) return;
+			entity.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, facing.toYRot(), 0);
+			if (entity instanceof Mob mob) mob.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.STRUCTURE, null);
+			level.addFreshEntity(entity);
+		});
 		return placed.size();
 	}
 

@@ -1,6 +1,6 @@
 # Security Gear
 
-A Minecraft **Bedrock Edition** add-on and **Java Edition** (Fabric) mod full of security gear: security cameras with monitors that show the camera's live picture, laser tripwires and laser fences, motion sensors, alarm sirens, searchlights, keycard readers and cell doors, prison walls and bars, barbed and razor wire, pit trapdoors, timed and tripwire bombs, winding rope bridges, blueprints for guard towers, prison cells and gatehouses, and security guards with guard dogs.
+A Minecraft **Bedrock Edition** add-on and **Java Edition** (Fabric) mod full of security gear: security cameras with monitors that show the camera's live picture, laser tripwires and laser fences, motion sensors, alarm sirens, searchlights, keycard readers and cell doors, prison walls and bars, barbed and razor wire, pit trapdoors, timed and tripwire bombs, winding rope bridges, blueprints for guard towers, prison cells and gatehouses, security guards with guard dogs, and criminals to lock up.
 
 **Download and info: https://ulfendk.github.io/minecraft-security-gear/** (på dansk: https://ulfendk.github.io/minecraft-security-gear/da/)
 
@@ -16,7 +16,8 @@ A Minecraft **Bedrock Edition** add-on and **Java Edition** (Fabric) mod full of
 - **Pit trapdoors** look like stone bricks. Step on one and the whole pit swings open, then closes again.
 - **Timed bombs** take a 5, 10, 30 or 60 second fuse, beep as they count down, and can be defused with shears. **Tripwire bombs** string a wire up to 8 blocks. Both respect the TNT game rule.
 - **Bridge winches** wind out a rope bridge, plank by plank, when powered, and wind it back in without power.
-- **Blueprints** build a guard tower (with a searchlight and a guard), a prison cell (with a keycard door) or a gatehouse (with a laser fence, a camera and a monitor), right in front of you.
+- **Blueprints** build a guard tower (with a searchlight and a guard), a prison cell (with a keycard door and an inmate) or a gatehouse (with a laser fence, a camera and a monitor), right in front of you.
+- **Criminals** to lock up: a striped convict, an inmate in an orange jumpsuit, a masked burglar and a gangster. They keep away from guard dogs and hit back when hit, and guards leave them alone. The prison cell blueprint comes with one inside.
 - **Security guards** patrol and fight hostile mobs. **Guard dogs** (German shepherds) can be tamed with bones. The guard's **baton** slows down whoever it hits.
 - English and Danish.
 

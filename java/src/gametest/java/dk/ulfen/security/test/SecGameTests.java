@@ -19,6 +19,7 @@ import dk.ulfen.security.block.PitTrapdoorBlock;
 import dk.ulfen.security.block.TimedBombBlock;
 import dk.ulfen.security.block.TripwireBombBlock;
 import dk.ulfen.security.blockentity.MonitorBlockEntity;
+import dk.ulfen.security.entity.Criminal;
 import dk.ulfen.security.entity.SecurityGuard;
 import dk.ulfen.security.structure.Blueprints;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
@@ -38,6 +39,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -185,6 +187,18 @@ public class SecGameTests {
 		helper.succeedWhen(() -> helper.assertTrue(guard.getTarget() == zombie, "guard has not targeted the zombie"));
 	}
 
+	/** A guard leaves a criminal next to it alone, and every criminal gets one of the outfits. */
+	@GameTest(maxTicks = 100)
+	public void guardIgnoresCriminal(GameTestHelper helper) {
+		SecurityGuard guard = helper.spawn(SecRegistry.SECURITY_GUARD, new BlockPos(1, 1, 1));
+		Criminal criminal = (Criminal) still(helper, SecRegistry.CRIMINAL, new BlockPos(3, 1, 1));
+		helper.assertTrue(criminal.getVariant() >= 0 && criminal.getVariant() < Criminal.VARIANTS, "bad outfit " + criminal.getVariant());
+		helper.runAfterDelay(80, () -> {
+			helper.assertTrue(guard.getTarget() == null, "guard went after the criminal");
+			helper.succeed();
+		});
+	}
+
 	/** An armed bomb on a 5 second fuse goes off. */
 	@GameTest(maxTicks = 200)
 	public void timedBombExplodes(GameTestHelper helper) {
@@ -213,6 +227,10 @@ public class SecGameTests {
 			BlockPos base = helper.absolutePos(new BlockPos(4 + x, 1, 1)).above(80);
 			int placed = Blueprints.build(helper.getLevel(), name, base, Direction.SOUTH);
 			helper.assertTrue(placed > 20, name + " placed only " + placed + " blocks");
+			if (name.equals("prison_cell")) {
+				int inmates = helper.getLevel().getEntitiesOfClass(Criminal.class, new AABB(base).inflate(8)).size();
+				helper.assertTrue(inmates == 1, "prison cell has " + inmates + " inmates");
+			}
 			helper.assertTrue(Blueprints.build(helper.getLevel(), name, base, Direction.SOUTH) == -1, name + " built into itself");
 			x += 14;
 		}

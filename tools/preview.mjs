@@ -33,13 +33,15 @@ for (const file of files) {
     views.push(a);
   }
 }
-for (const id of ['security_camera', 'security_guard', 'guard_dog']) {
+for (const id of ['security_camera', 'security_guard', 'criminal', 'guard_dog']) {
   if (only.length && !only.includes(id)) continue;
   const hidden = new Set(id === 'security_camera' ? ['ceiling_mount'] : []);
-  const a = render(models[id].geometry, models[id].texture, { yaw: 35, size: 128, hidden });
-  const b = render(models[id].geometry, models[id].texture, { yaw: 215, size: 128, hidden });
-  await writeFile(join(OUT, `${id}.png`), sheet([a, b], { cols: 2, cell: 128 }));
-  views.push(a);
+  // Front and back of the default texture, then the front of each variant.
+  const textures = [models[id].texture, ...models[id].variants.map(([, png]) => png)];
+  const shots = [render(models[id].geometry, textures[0], { yaw: 35, size: 128, hidden }), render(models[id].geometry, textures[0], { yaw: 215, size: 128, hidden })];
+  for (const png of textures.slice(1)) shots.push(render(models[id].geometry, png, { yaw: 35, size: 128, hidden }));
+  await writeFile(join(OUT, `${id}.png`), sheet(shots, { cols: shots.length, cell: 128 }));
+  views.push(...shots.filter((_, i) => i !== 1));
 }
 await writeFile(join(OUT, 'sheet.png'), sheet(views, { cols: 6, cell: 128 }));
 console.log(`Wrote ${views.length} previews to ${OUT}/`);

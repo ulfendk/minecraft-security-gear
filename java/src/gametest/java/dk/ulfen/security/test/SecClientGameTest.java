@@ -91,6 +91,16 @@ public class SecClientGameTest implements FabricClientGameTest {
 			context.waitTicks(40);
 			context.takeScreenshot("secgear_gallery");
 
+			// The criminals, one in each outfit, lined up next to a guard.
+			server.runCommand("fill -12 -60 -12 12 -50 12 air");
+			server.runCommand("tp @e[type=!player] 0 -200 0");
+			context.waitTicks(5);
+			for (int i = 0; i < 4; i++) server.runCommand("summon secgear:criminal " + (-4 + 2 * i) + " -60 -3 {NoAI:1b,Variant:" + i + ",Rotation:[180f,0f]}");
+			server.runCommand("summon secgear:security_guard 5 -60 -3 {NoAI:1b,Rotation:[160f,0f]}");
+			server.runCommand("tp @p 0.5 -58 -9 0 12");
+			context.waitTicks(40);
+			context.takeScreenshot("secgear_criminals");
+
 			// A guard tower with its searchlight on at night, and lasers across the yard.
 			server.runCommand("fill -12 -60 -12 12 -50 12 air");
 			server.runCommand("kill @e[type=!player]");
