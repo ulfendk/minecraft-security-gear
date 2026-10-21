@@ -2,6 +2,7 @@
 // Builds small test rigs in a flat world and logs SELFTEST PASS/FAIL lines.
 import { BlockPermutation, system, world } from '@minecraft/server';
 import { buildStructure } from './blueprints.js';
+import { grantAccess } from './devices.js';
 import { NS } from './util.js';
 
 const wait = (ticks) => new Promise((r) => system.runTimeout(r, ticks));
@@ -59,6 +60,18 @@ async function run() {
   deck = 0;
   for (let x = 5; x <= 16; x++) if (type(x, Y, 12) === `${NS}:bridge_deck`) deck++;
   check('bridge_retracts', deck === 0, `(${deck} deck blocks)`);
+
+  // Keycard reader on the wall beside a cell door: a valid card opens the door, which closes again on its own.
+  set(17, Y + 1, 21, 'minecraft:stone_bricks');
+  set(17, Y + 1, 20, `${NS}:keycard_reader`, { 'minecraft:cardinal_direction': 'north' });
+  set(16, Y, 20, `${NS}:cell_door`, { 'minecraft:cardinal_direction': 'north' });
+  set(16, Y + 1, 20, `${NS}:cell_door_upper`, { 'minecraft:cardinal_direction': 'north' });
+  await wait(10);
+  grantAccess(dim.getBlock({ x: 17, y: Y + 1, z: 20 }));
+  await wait(10);
+  check('reader_opens_door', state(16, Y, 20, 'open') === true);
+  await wait(100);
+  check('reader_door_closes', state(16, Y, 20, 'open') === false, `(reader powered: ${state(17, Y + 1, 20, 'powered')})`);
 
   // Blueprints
   for (const [i, name] of ['guard_tower', 'prison_cell', 'gatehouse'].entries()) {

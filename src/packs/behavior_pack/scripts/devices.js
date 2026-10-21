@@ -153,14 +153,19 @@ export function readerInteract({ block, player }) {
     return player.onScreenDisplay.setActionBar({ rawtext: [{ translate: `${NS}.reader.level`, with: { rawtext: [{ translate: `${NS}.level.${next}` }] } }] });
   }
   if (level >= required) {
-    pulse(block, 40);
-    openNearbyDoors(block, 60);
-    block.dimension.playSound('random.orb', centre(block), { pitch: 1.5 });
+    grantAccess(block);
     tell(player, 'reader.granted');
   } else {
     block.dimension.playSound('note.bass', centre(block), { pitch: 0.6 });
     tell(player, 'reader.denied');
   }
+}
+
+/** A valid card: pulse the reader and open the cell doors around it for 3 seconds. */
+export function grantAccess(block) {
+  pulse(block, 40);
+  openNearbyDoors(block, 60);
+  block.dimension.playSound('random.orb', centre(block), { pitch: 1.5 });
 }
 
 function openNearbyDoors(block, ticks) {
