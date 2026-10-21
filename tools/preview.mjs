@@ -33,7 +33,7 @@ for (const file of files) {
     views.push(a);
   }
 }
-for (const id of ['security_camera', 'security_guard', 'criminal', 'guard_dog']) {
+for (const id of ['security_camera', 'security_guard', 'criminal', 'brute', 'guard_dog']) {
   if (only.length && !only.includes(id)) continue;
   const hidden = new Set(id === 'security_camera' ? ['ceiling_mount'] : []);
   // Front and back of the default texture, then the front of each variant.

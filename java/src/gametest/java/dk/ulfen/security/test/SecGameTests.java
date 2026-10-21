@@ -19,6 +19,7 @@ import dk.ulfen.security.block.PitTrapdoorBlock;
 import dk.ulfen.security.block.TimedBombBlock;
 import dk.ulfen.security.block.TripwireBombBlock;
 import dk.ulfen.security.blockentity.MonitorBlockEntity;
+import dk.ulfen.security.entity.Brute;
 import dk.ulfen.security.entity.Criminal;
 import dk.ulfen.security.entity.SecurityGuard;
 import dk.ulfen.security.structure.Blueprints;
@@ -32,6 +33,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
@@ -187,19 +189,39 @@ public class SecGameTests {
 		helper.succeedWhen(() -> helper.assertTrue(guard.getTarget() == zombie, "guard has not targeted the zombie"));
 	}
 
-	/** A guard leaves a criminal next to it alone, and every criminal gets one of the outfits. */
+	/** A guard leaves criminals and the brute alone; each gets one of its outfits, and the brute is the bigger one. */
 	@GameTest(maxTicks = 100)
 	public void guardIgnoresCriminal(GameTestHelper helper) {
 		SecurityGuard guard = helper.spawn(SecRegistry.SECURITY_GUARD, new BlockPos(1, 1, 1));
 		Criminal criminal = (Criminal) still(helper, SecRegistry.CRIMINAL, new BlockPos(3, 1, 1));
+		Brute brute = (Brute) still(helper, SecRegistry.BRUTE, new BlockPos(1, 1, 4));
 		helper.assertTrue(criminal.getVariant() >= 0 && criminal.getVariant() < Criminal.VARIANTS, "bad outfit " + criminal.getVariant());
+		helper.assertTrue(brute.getVariant() >= 0 && brute.getVariant() < Brute.VARIANTS, "bad brute outfit " + brute.getVariant());
+		helper.assertTrue(brute.getBbWidth() > criminal.getBbWidth() && brute.getMaxHealth() > criminal.getMaxHealth(), "the brute is no bigger than a criminal");
 		helper.runAfterDelay(80, () -> {
 			helper.assertTrue(guard.getTarget() == null, "guard went after the criminal");
 			helper.succeed();
 		});
 	}
 
-	/** An armed bomb on a 5 second fuse goes off. */
+	/** The brute fits in a prison cell: two blocks high, and he doesn't suffocate there. */
+	@GameTest(maxTicks = 60)
+	public void bruteFitsInPrisonCell(GameTestHelper helper) {
+		BlockPos base = helper.absolutePos(new BlockPos(4, 1, 1)).above(80);
+		helper.assertTrue(Blueprints.build(helper.getLevel(), "prison_cell", base, Direction.SOUTH) > 20, "prison cell not built");
+		Criminal inmate = helper.getLevel().getEntitiesOfClass(Criminal.class, new AABB(base).inflate(8)).get(0);
+		Brute brute = SecRegistry.BRUTE.create(helper.getLevel(), EntitySpawnReason.COMMAND);
+		brute.snapTo(inmate.getX(), inmate.getY(), inmate.getZ(), 0, 0);
+		brute.setNoAi(true);
+		helper.getLevel().addFreshEntity(brute);
+		inmate.discard();
+		helper.runAfterDelay(40, () -> {
+			helper.assertTrue(brute.isAlive() && brute.getHealth() == brute.getMaxHealth(), "the brute got hurt in the cell: " + brute.getHealth());
+			helper.succeed();
+		});
+	}
+
+		/** An armed bomb on a 5 second fuse goes off. */
 	@GameTest(maxTicks = 200)
 	public void timedBombExplodes(GameTestHelper helper) {
 		BlockPos pos = new BlockPos(3, 1, 3);

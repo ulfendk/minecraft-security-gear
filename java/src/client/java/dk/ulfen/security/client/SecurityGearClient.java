@@ -10,6 +10,7 @@ import dk.ulfen.security.client.render.LaserRenderer;
 import dk.ulfen.security.client.render.MonitorRenderer;
 import dk.ulfen.security.client.render.SearchlightRenderer;
 import dk.ulfen.security.client.render.VariantRenderer;
+import dk.ulfen.security.entity.Brute;
 import dk.ulfen.security.entity.Criminal;
 import dk.ulfen.security.entity.SecurityGuard;
 import net.fabricmc.api.ClientModInitializer;
@@ -29,6 +30,7 @@ public class SecurityGearClient implements ClientModInitializer {
 		BlockEntityRendererRegistry.register(SecRegistry.LASER_BE, LaserRenderer::new);
 		EntityRenderers.register(SecRegistry.SECURITY_GUARD, ctx -> new VariantRenderer<>(ctx, "security_guard", "skin", SecurityGuard.VARIANTS));
 		EntityRenderers.register(SecRegistry.CRIMINAL, ctx -> new VariantRenderer<>(ctx, "criminal", "outfit", Criminal.VARIANTS));
+		EntityRenderers.register(SecRegistry.BRUTE, ctx -> new VariantRenderer<>(ctx, "brute", "outfit", Brute.VARIANTS));
 		EntityRenderers.register(SecRegistry.GUARD_DOG, GuardDogRenderer::new);
 		EntityRenderers.register(SecRegistry.CAMERA_VIEW, NoopRenderer::new);
 

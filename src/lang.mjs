@@ -7,6 +7,7 @@ export const LOCALES = ['en_US', 'da_DK'];
 export const ENTITY_NAMES = {
   security_guard: { en_US: 'Security Guard', da_DK: 'Sikkerhedsvagt' },
   criminal: { en_US: 'Criminal', da_DK: 'Forbryder' },
+  brute: { en_US: 'Brute', da_DK: 'Bølle' },
   guard_dog: { en_US: 'Guard Dog', da_DK: 'Vagthund' },
   security_camera: { en_US: 'Security Camera', da_DK: 'Overvågningskamera' },
 };

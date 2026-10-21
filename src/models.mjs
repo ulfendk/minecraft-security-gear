@@ -1,5 +1,5 @@
 // Box-UV models (Bedrock geometry, read as-is by GeckoLib on Java): the security
-// camera, the searchlight, the security guard, the criminals and the guard dog.
+// camera, the searchlight, the security guard, the criminals, the brute and the guard dog.
 // Coordinates: pixels, y up, the model faces north (-z), +x is the model's left.
 import { quadruped } from './lib/anim.mjs';
 import { felid } from './lib/bodies.mjs';
@@ -347,6 +347,74 @@ export const criminal = {
   egg: ['#e8742a', '#26262a'],
 };
 
+// ---------------------------------------------------------------- brute
+
+/**
+ * A big, muscular criminal: a chest 14 pixels wide (the others' are 8), thick bare
+ * arms that hang almost to the knees and a small shaved head. The model is 34
+ * pixels tall, but his hitbox stays under two blocks so he fits through cell
+ * doors and inside the prison cell.
+ */
+function bruteModel() {
+  const face = [
+    { face: 'front', x: 1, y: 4, w: 2, h: 1, color: '#f2f2f2' },
+    { face: 'front', x: 5, y: 4, w: 2, h: 1, color: '#f2f2f2' },
+    { face: 'front', x: 2, y: 4, color: '#2a1d16' },
+    { face: 'front', x: 5, y: 4, color: '#2a1d16' },
+    { face: 'front', x: 1, y: 3, w: 6, h: 1, color: '#2a1d16' }, // one heavy brow
+    { face: 'front', x: 3, y: 6, w: 2, h: 1, color: '#6a3a2e' }, // a frown
+    { face: 'front', x: 2, y: 7, color: '#6a3a2e' },
+    { face: 'front', x: 5, y: 7, color: '#6a3a2e' },
+    { face: 'front', x: 6, y: 5, w: 1, h: 2, color: '#e6c2a8' }, // scar
+  ];
+  return {
+    bones: [
+      { name: 'root', pivot: [0, 0, 0] },
+      { name: 'body', parent: 'root', pivot: [0, 26, 0], cubes: [{ origin: [-7, 13, -3.5], size: [14, 13, 7], mat: 'shirt' }] },
+      { name: 'head', parent: 'body', pivot: [0, 26, 0], cubes: [{ origin: [-4, 26, -5], size: [8, 8, 8], mat: 'head', marks: face }] },
+      { name: 'arm_r', parent: 'body', pivot: [-10, 25, 0], cubes: [{ origin: [-13, 11, -3], size: [6, 15, 6], mat: 'arm' }] },
+      { name: 'arm_l', parent: 'body', pivot: [10, 25, 0], cubes: [{ origin: [7, 11, -3], size: [6, 15, 6], mat: 'arm' }] },
+      { name: 'leg_r', parent: 'root', pivot: [-2.5, 13, 0], cubes: [{ origin: [-5, 0, -2.5], size: [5, 13, 5], mat: 'trousers' }] },
+      { name: 'leg_l', parent: 'root', pivot: [2.5, 13, 0], cubes: [{ origin: [0, 0, -2.5], size: [5, 13, 5], mat: 'trousers' }] },
+    ],
+  };
+}
+
+/** Tank top: bare shoulders and armpits, straps over the top. */
+const tankTop = (skin) => region(skin, ({ face: f, i, j, fw }) =>
+  ((f === 'front' || f === 'back') && j <= 2 && (i <= 2 || i >= fw - 3)) ||
+  ((f === 'left' || f === 'right') && j <= 3) ||
+  (f === 'top' && !((i >= 3 && i <= 4) || (i >= fw - 5 && i <= fw - 4))));
+/** Tattoos on the outside of the upper arms: a dark cross and a band around the left arm. */
+const tattoos = region('#2f5560', ({ cube, face: f, i, j }) =>
+  (cube.bone === 'arm_r' && f === 'right' && ((i === 3 && j >= 2 && j <= 6) || (j === 3 && i >= 2 && i <= 4))) ||
+  (cube.bone === 'arm_l' && f !== 'top' && f !== 'bottom' && j === 4));
+
+const BRUTE_OUTFITS = [
+  { top: { base: '#e8742a', layers: [mottle(0.05)] }, trousers: '#e8742a' },
+  { top: { base: '#efe9da', layers: [bands('#26262a')] }, trousers: '#efe9da', striped: true },
+];
+
+function bruteMaterials(o) {
+  const skin = CRIMINAL_SKIN;
+  return {
+    // Shaved: a shade darker on top, stubble on the jaw.
+    head: { base: skin, layers: [region('#b08566', ({ face: f, p }) => f === 'top' || (f !== 'front' && f !== 'bottom' && p[1] > 32.5)), region('#ad8569', ({ face: f, j }) => f === 'front' && j >= 6), mottle(0.05)] },
+    shirt: { ...o.top, layers: [...o.top.layers, tankTop(skin)] },
+    arm: { base: skin, layers: [tattoos, mottle(0.05)] },
+    trousers: { base: o.trousers, layers: [...(o.striped ? [bands('#26262a')] : [mottle(0.05)]), shoes('#2a2420'), region('#2a2420', ({ p }) => p[1] < 3)] },
+  };
+}
+
+export const brute = {
+  id: 'brute',
+  model: bruteModel(),
+  materials: bruteMaterials(BRUTE_OUTFITS[0]),
+  variants: BRUTE_OUTFITS.map((o, i) => ({ texture: i === 0 ? null : `outfit${i}`, materials: bruteMaterials(o) })),
+  anims: bipedAnims(),
+  egg: ['#e8742a', '#c99a78'],
+};
+
 // ---------------------------------------------------------------- guard dog
 
 function dogModel() {
@@ -384,5 +452,5 @@ export const dog = {
   egg: ['#b98446', '#2b2420'],
 };
 
-export const ENTITY_MODELS = [camera, searchlight, guard, criminal, dog];
+export const ENTITY_MODELS = [camera, searchlight, guard, criminal, brute, dog];
 export { face, notFace };

@@ -9,6 +9,7 @@ import com.geckolib.animation.object.PlayState;
 import com.geckolib.constant.DataTickets;
 import com.geckolib.util.GeckoLibUtil;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -46,10 +47,6 @@ import org.jspecify.annotations.Nullable;
 public class Criminal extends PathfinderMob implements GeoEntity, HasVariant {
 	private static final EntityDataAccessor<Integer> VARIANT = SynchedEntityData.defineId(Criminal.class, EntityDataSerializers.INT);
 	public static final int VARIANTS = 4;
-	private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("animation.secgear.criminal.idle");
-	private static final RawAnimation WALK = RawAnimation.begin().thenLoop("animation.secgear.criminal.walk");
-	private static final RawAnimation RUN = RawAnimation.begin().thenLoop("animation.secgear.criminal.run");
-	private static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("animation.secgear.criminal.attack");
 	private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
 	public Criminal(EntityType<? extends Criminal> type, Level level) {
@@ -69,11 +66,21 @@ public class Criminal extends PathfinderMob implements GeoEntity, HasVariant {
 	protected void registerGoals() {
 		this.goalSelector.addGoal(0, new FloatGoal(this));
 		this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.1, true));
-		this.goalSelector.addGoal(3, new AvoidEntityGoal<>(this, GuardDog.class, 6.0F, 1.0, 1.3));
+		if (fearsDogs()) this.goalSelector.addGoal(3, new AvoidEntityGoal<>(this, GuardDog.class, 6.0F, 1.0, 1.3));
 		this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 0.6));
 		this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
 		this.goalSelector.addGoal(9, new RandomLookAroundGoal(this));
 		this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
+	}
+
+	/** How many outfits there are to pick from. */
+	protected int variants() {
+		return VARIANTS;
+	}
+
+	/** Called from the constructor (via registerGoals), so it must not depend on fields. */
+	protected boolean fearsDogs() {
+		return true;
 	}
 
 	@Override
@@ -89,7 +96,7 @@ public class Criminal extends PathfinderMob implements GeoEntity, HasVariant {
 
 	@Override
 	public @Nullable SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, EntitySpawnReason reason, @Nullable SpawnGroupData data) {
-		this.entityData.set(VARIANT, level.getRandom().nextInt(VARIANTS));
+		this.entityData.set(VARIANT, level.getRandom().nextInt(variants()));
 		return super.finalizeSpawn(level, difficulty, reason, data);
 	}
 
@@ -122,13 +129,17 @@ public class Criminal extends PathfinderMob implements GeoEntity, HasVariant {
 
 	@Override
 	public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+		// The animations are named after the entity: animation.secgear.criminal.walk, animation.secgear.brute.walk, ...
+		String prefix = "animation.secgear." + BuiltInRegistries.ENTITY_TYPE.getKey(getType()).getPath() + ".";
+		RawAnimation idle = RawAnimation.begin().thenLoop(prefix + "idle"), walk = RawAnimation.begin().thenLoop(prefix + "walk");
+		RawAnimation run = RawAnimation.begin().thenLoop(prefix + "run"), attack = RawAnimation.begin().thenPlay(prefix + "attack");
 		controllers.add(new AnimationController<Criminal>("move", 4, state -> {
 			Vec3 v = state.getDataOrDefault(DataTickets.VELOCITY, Vec3.ZERO);
 			double speed = Math.sqrt(v.x * v.x + v.z * v.z) * 20;
-			return state.setAndContinue(speed > 4.5 ? RUN : speed > 0.4 ? WALK : IDLE);
+			return state.setAndContinue(speed > 4.5 ? run : speed > 0.4 ? walk : idle);
 		}));
 		controllers.add(new AnimationController<Criminal>("attack", 1, state -> {
-			if (state.animatable().isSwinging()) return state.setAndContinue(ATTACK);
+			if (state.animatable().isSwinging()) return state.setAndContinue(attack);
 			state.controller().reset();
 			return PlayState.STOP;
 		}));

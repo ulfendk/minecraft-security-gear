@@ -18,6 +18,7 @@ A Minecraft **Bedrock Edition** add-on and **Java Edition** (Fabric) mod full of
 - **Bridge winches** wind out a rope bridge, plank by plank, when powered, and wind it back in without power.
 - **Blueprints** build a guard tower (with a searchlight and a guard), a prison cell (with a keycard door and an inmate) or a gatehouse (with a laser fence, a camera and a monitor), right in front of you.
 - **Criminals** to lock up: a striped convict, an inmate in an orange jumpsuit, a masked burglar and a gangster. They keep away from guard dogs and hit back when hit, and guards leave them alone. The prison cell blueprint comes with one inside.
+  - The **brute** is the big one: a broad, muscular inmate in a tank top (still under two blocks tall, so he fits in a cell), twice as tough, hits hard, hard to push back and not afraid of dogs.
 - **Security guards** patrol and fight hostile mobs. **Guard dogs** (German shepherds) can be tamed with bones. The guard's **baton** slows down whoever it hits.
 - English and Danish.
 

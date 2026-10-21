@@ -80,6 +80,11 @@ async function run() {
   }
   const inmates = dim.getEntities({ type: `${NS}:criminal`, location: { x: 16, y: Y, z: 40 }, maxDistance: 10 });
   check('prison_cell_inmate', inmates.length === 1, `(${inmates.length} criminals, outfit ${inmates[0]?.getComponent('minecraft:variant')?.value})`);
+  const brute = dim.spawnEntity(`${NS}:brute`, { x: 30.5, y: Y, z: 30.5 });
+  await wait(2);
+  const outfit = brute.getComponent('minecraft:variant')?.value;
+  check('brute_spawns', brute.isValid && (outfit === 0 || outfit === 1), `(outfit ${outfit}, health ${brute.getComponent('minecraft:health')?.effectiveMax})`);
+  brute.remove();
 
   // Timed bomb on a 5 second fuse, armed by redstone.
   set(24, Y, 24, `${NS}:timed_bomb`, { [`${NS}:timer`]: 0 });

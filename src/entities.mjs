@@ -1,7 +1,7 @@
 // Bedrock entity definitions (behavior + client) for the security guard, the
-// criminals, the guard dog and the security camera. On Java these are hand-written classes.
+// criminals, the brute, the guard dog and the security camera. On Java these are hand-written classes.
 import { NS } from './lib/constants.mjs';
-import { camera, criminal, dog, guard } from './models.mjs';
+import { brute, camera, criminal, dog, guard } from './models.mjs';
 
 const anim = (id, name) => `animation.${NS}.${id}.${name}`;
 const monsters = { any_of: [{ test: 'is_family', subject: 'other', value: 'monster' }] };
@@ -51,19 +51,23 @@ function guardEntity() {
   };
 }
 
-/** Shuffles about, keeps away from guard dogs and hits back when hit. Guards leave criminals alone. */
-function criminalEntity() {
-  const variants = Object.fromEntries(criminal.variants.map((_, i) => [`${NS}:variant_${i}`, { 'minecraft:variant': { value: i } }]));
+/**
+ * Shuffles about, keeps away from guard dogs and hits back when hit. Guards leave
+ * criminals alone. The brute is bigger, tougher, hits harder and fears no dog.
+ */
+function criminalEntity(spec = criminal, { health = 20, speed = 0.25, damage = 3, size = [0.6, 1.95], knockback = 0, fearsDogs = true } = {}) {
+  const variants = Object.fromEntries(spec.variants.map((_, i) => [`${NS}:variant_${i}`, { 'minecraft:variant': { value: i } }]));
   return {
     format_version: '1.21.90',
     'minecraft:entity': {
-      description: { identifier: `${NS}:criminal`, spawn_category: 'creature', is_spawnable: true, is_summonable: true },
+      description: { identifier: `${NS}:${spec.id}`, spawn_category: 'creature', is_spawnable: true, is_summonable: true },
       component_groups: variants,
       components: {
         'minecraft:type_family': { family: ['criminal', 'mob'] },
-        'minecraft:collision_box': { width: 0.6, height: 1.95 },
-        'minecraft:health': { value: 20, max: 20 },
-        'minecraft:movement': { value: 0.25 },
+        'minecraft:collision_box': { width: size[0], height: size[1] },
+        'minecraft:health': { value: health, max: health },
+        'minecraft:movement': { value: speed },
+        ...(knockback ? { 'minecraft:knockback_resistance': { value: knockback } } : {}),
         'minecraft:navigation.walk': { can_path_over_water: true, avoid_damage_blocks: true },
         'minecraft:movement.basic': {},
         'minecraft:jump.static': {},
@@ -73,22 +77,24 @@ function criminalEntity() {
         'minecraft:nameable': {},
         'minecraft:leashable': {},
         'minecraft:persistent': {},
-        'minecraft:attack': { damage: 3 },
+        'minecraft:attack': { damage },
         'minecraft:conditional_bandwidth_optimization': {},
         'minecraft:behavior.float': { priority: 0 },
         'minecraft:behavior.hurt_by_target': { priority: 1 },
         'minecraft:behavior.melee_attack': { priority: 2, speed_multiplier: 1.1, track_target: true },
-        'minecraft:behavior.avoid_mob_type': {
-          priority: 3,
-          entity_types: [{ filters: { test: 'is_family', subject: 'other', value: 'guard_dog' }, max_dist: 6, walk_speed_multiplier: 1.0, sprint_speed_multiplier: 1.3 }],
-        },
+        ...(fearsDogs ? {
+          'minecraft:behavior.avoid_mob_type': {
+            priority: 3,
+            entity_types: [{ filters: { test: 'is_family', subject: 'other', value: 'guard_dog' }, max_dist: 6, walk_speed_multiplier: 1.0, sprint_speed_multiplier: 1.3 }],
+          },
+        } : {}),
         'minecraft:behavior.random_stroll': { priority: 7, speed_multiplier: 0.6, xz_dist: 4 },
         'minecraft:behavior.look_at_player': { priority: 8, look_distance: 8, probability: 0.1 },
         'minecraft:behavior.random_look_around': { priority: 9 },
       },
       events: {
         'minecraft:entity_spawned': {
-          randomize: criminal.variants.map((_, i) => ({ weight: 1, add: { component_groups: [`${NS}:variant_${i}`] } })),
+          randomize: spec.variants.map((_, i) => ({ weight: 1, add: { component_groups: [`${NS}:variant_${i}`] } })),
         },
       },
     },
@@ -240,8 +246,9 @@ export function bedrockEntities() {
   const files = { bp: {}, rp: {} };
   const ctrl = (id, controllers) => ({ format_version: '1.10.0', animation_controllers: controllers });
 
-  // Guard and criminals: two-legged, with texture variants.
-  for (const [spec, entity] of [[guard, guardEntity()], [criminal, criminalEntity()]]) {
+  // Guard, criminals and the brute: two-legged, with texture variants.
+  const bruteEntity = criminalEntity(brute, { health: 40, speed: 0.22, damage: 7, size: [0.9, 1.95], knockback: 0.6, fearsDogs: false });
+  for (const [spec, entity] of [[guard, guardEntity()], [criminal, criminalEntity()], [brute, bruteEntity]]) {
     const id = spec.id;
     files.bp[`entities/${id}.json`] = entity;
     const textures = { default: `textures/entity/${NS}/${id}` };
@@ -334,6 +341,7 @@ export function bedrockEntities() {
       entities: {
         [`${NS}:security_guard`]: { volume: 1, pitch: [0.9, 1.1], events: { hurt: 'game.player.hurt', death: 'game.player.die' } },
         [`${NS}:criminal`]: { volume: 1, pitch: [0.9, 1.1], events: { hurt: 'game.player.hurt', death: 'game.player.die' } },
+        [`${NS}:brute`]: { volume: 1.2, pitch: [0.6, 0.7], events: { hurt: 'game.player.hurt', death: 'game.player.die' } },
         [`${NS}:guard_dog`]: { volume: 1, pitch: [0.9, 1.1], events: { ambient: 'mob.wolf.bark', hurt: 'mob.wolf.hurt', death: 'mob.wolf.death' } },
       },
     },

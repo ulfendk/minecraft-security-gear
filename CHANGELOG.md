@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.3.0] - 2026-10-21
+- The Brute, a bigger criminal on both editions: a muscular inmate in an orange or striped tank top, with tattooed arms, a shaved head and a scar. He has twice the health, hits hard, is hard to push back and isn't afraid of guard dogs. Spawn him with the Brute spawn egg.
+
 ## [0.2.1] - 2026-10-21
 - The burglar's eye mask stands out: the beanie is now navy and sits a row higher, with a strip of forehead between it and the mask.
 

@@ -199,7 +199,7 @@ export async function build({ quiet = false } = {}) {
   const ent = bedrockEntities();
   for (const [p, body] of Object.entries(ent.bp)) await write(join(BP, p), body);
   for (const [p, body] of Object.entries(ent.rp)) await write(join(RP, p), body);
-  for (const id of ['security_guard', 'criminal', 'guard_dog', 'security_camera']) {
+  for (const id of ['security_guard', 'criminal', 'brute', 'guard_dog', 'security_camera']) {
     const m = models[id];
     await write(join(RP, 'models', 'entity', `${id}.geo.json`), m.geometry);
     await write(join(RP, 'textures', 'entity', NS, `${id}.png`), m.texture);
