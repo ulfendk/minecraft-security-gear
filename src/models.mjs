@@ -250,8 +250,8 @@ function criminalModel() {
     { face: 'front', x: 5, y: 4, w: 2, h: 1, color: '#f2f2f2' },
     { face: 'front', x: 2, y: 4, color: '#3a2a20' },
     { face: 'front', x: 5, y: 4, color: '#3a2a20' },
-    { face: 'front', x: 1, y: 3, w: 2, h: 1, color: '#2a1d16' }, // brows
-    { face: 'front', x: 5, y: 3, w: 2, h: 1, color: '#2a1d16' },
+    { face: 'front', x: 1, y: 3, w: 2, h: 1, color: '#141416' }, // brows, the same black as the burglar's mask
+    { face: 'front', x: 5, y: 3, w: 2, h: 1, color: '#141416' },
     { face: 'front', x: 3, y: 6, w: 2, h: 1, color: '#7a4a3a' }, // mouth
   ];
   return {
@@ -300,12 +300,13 @@ const OUTFITS = [
   },
   {
     skin: CRIMINAL_SKIN, hairColor: '#8a4a22',
-    // Eye mask across the brows and eyes.
+    // Eye mask across the brows and eyes (the brows are the mask's colour, so they vanish into it).
     mask: region('#141416', ({ face: f, j, i }) => (f === 'front' && j >= 3 && j <= 4) || ((f === 'left' || f === 'right') && j >= 3 && j <= 4 && i >= 6)),
     shirt: { base: '#f0f0f0', layers: [bands('#1d1d1f', { size: 1 })] },
     sleeve: { base: '#f0f0f0', layers: [bands('#1d1d1f', { size: 1 })] },
     trousers: { base: '#1f1f22', layers: [shoes('#3b2a1e'), mottle(0.05)] },
-    hat: { base: T, layers: [region('#1f1f22', ({ p }) => p[1] > 28.5), region('#2c2c30', ({ p }) => p[1] > 28.5 && p[1] < 29.5)] }, // beanie
+    // Navy beanie, one row above the mask so a strip of forehead keeps them apart.
+    hat: { base: T, layers: [region('#26344d', ({ p }) => p[1] > 30), region('#384a68', ({ p }) => p[1] > 30 && p[1] < 31)] },
   },
   {
     skin: CRIMINAL_SKIN, hairColor: '#120d0a',

@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.2.1] - 2026-10-21
+- The burglar's eye mask stands out: the beanie is now navy and sits a row higher, with a strip of forehead between it and the mask.
+
 ## [0.2.0] - 2026-10-21
 - Criminals to put in your prison, on both editions: a striped convict, an inmate in an orange jumpsuit, a masked burglar and a gangster in a pinstripe suit. They shuffle about, keep away from guard dogs and hit back when hit. Guards leave them alone. Spawn them with the Criminal spawn egg.
 - The prison cell blueprint now comes with a criminal inside.
