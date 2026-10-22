@@ -8,16 +8,20 @@ import { build } from './build.mjs';
 import { blockAtlas, render } from './render.mjs';
 import { TEXTURES } from '../src/blocks.mjs';
 import { items } from '../src/items.mjs';
+import { LANGUAGES, STRINGS } from '../src/i18n.mjs';
 
 const OUT = 'build/site';
 const RP = 'build/resource_pack';
 const repo = process.env.GITHUB_REPOSITORY ?? process.env.SITE_REPO ?? 'ulfendk/minecraft-security-gear';
 const [owner, name] = repo.split('/');
+// The index of all our mods, which every mod's site links back to.
+const INDEX_URL = `https://${owner}.github.io/minecraft-index/`;
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 /** What each piece of gear does, grouped as on the page. [id, image, en, da] */
 const SECTIONS = [
   {
+    id: 'surveillance',
     title: { en: 'Surveillance', da: 'Overvågning' },
     gear: [
       ['security_camera', 'entity:security_camera', ['Security Camera', 'Hangs on a wall or from a ceiling and pans slowly from side to side. Sneak and use it to make it hold still.'], ['Overvågningskamera', 'Hænger på en væg eller i loftet og panorerer langsomt fra side til side. Snig og brug det for at få det til at stå stille.']],
@@ -27,6 +31,7 @@ const SECTIONS = [
     ],
   },
   {
+    id: 'alarms',
     title: { en: 'Lasers and alarms', da: 'Lasere og alarmer' },
     gear: [
       ['laser_emitter', 'block:laser_emitter', ['Laser Tripwire', 'A red beam up to 16 blocks long. When something crosses it, a Laser Receiver at the far end gives a redstone pulse. Redstone switches the laser off.'], ['Laserstråle', 'En rød stråle på op til 16 blokke. Når noget krydser den, giver en lasermodtager i den anden ende et redstone-signal. Redstone slukker laseren.']],
@@ -37,6 +42,7 @@ const SECTIONS = [
     ],
   },
   {
+    id: 'prisons',
     title: { en: 'Access control and prisons', da: 'Adgangskontrol og fængsler' },
     gear: [
       ['keycard_reader', 'block:keycard_reader', ['Keycard Reader', 'Swipe a Guard, Officer or Warden keycard. With enough clearance it opens the cell door next to it. Sneak and use a Warden card to change the level.'], ['Nøglekortlæser', 'Stryg et vagt-, betjent- eller direktørnøglekort. Med højt nok adgangsniveau åbner den celledøren ved siden af. Snig og brug et direktørkort for at ændre niveauet.']],
@@ -48,6 +54,7 @@ const SECTIONS = [
     ],
   },
   {
+    id: 'traps',
     title: { en: 'Traps and bombs', da: 'Fælder og bomber' },
     gear: [
       ['pit_trapdoor', 'block:pit_trapdoor_open', ['Pit Trapdoor', 'Looks just like stone bricks. Step on it and the whole pit swings open, then closes again.'], ['Faldlem', 'Ligner helt almindelige stenmursten. Træd på den, og hele graven åbner sig og lukker igen.']],
@@ -56,6 +63,7 @@ const SECTIONS = [
     ],
   },
   {
+    id: 'guards',
     title: { en: 'Bridges, towers and guards', da: 'Broer, tårne og vagter' },
     gear: [
       ['bridge_winch', 'block:bridge_deck', ['Bridge Winch', 'Powered, it winds out a rope bridge, one plank at a time, up to 12 blocks. Without power it winds it back in.'], ['Brospil', 'Med strøm vikler det en rebbro ud, en planke ad gangen, op til 12 blokke. Uden strøm vikler det den ind igen.']],
@@ -68,39 +76,6 @@ const SECTIONS = [
     ],
   },
 ];
-
-const T = {
-  en: {
-    title: 'Security Gear for Minecraft',
-    tagline: 'Security cameras with live monitors, laser tripwires, bombs, pit traps, prison walls, winding bridges, guard towers, guards and guard dogs.',
-    bedrock: 'Bedrock Edition', bedrockHow: 'Download the .mcaddon and open it. Then turn on Security Gear under Behavior Packs for your world.',
-    java: 'Java Edition (Fabric)', javaHow: 'Put the .jar in your mods folder with Fabric API and GeckoLib (Minecraft 26.3).',
-    download: 'Download', latest: 'Latest version', released: 'released', source: 'Source code', other: 'Dansk',
-    upgrade: 'Upgrading to a new version',
-    upgradeSteps: [
-      '<strong>Download the new version</strong> and open the file. A newer version replaces the one you have, and your worlds use it the next time you load them.',
-      '<strong>Still running the old version?</strong> (or Minecraft says it is already installed): go to <em>Settings → Storage</em>, delete Security Gear under both <em>Resource Packs</em> and <em>Behavior Packs</em>, then open the new file again.',
-      '<strong>Check the world:</strong> in the world\'s <em>Edit</em> screen, under <em>Behavior Packs</em> and <em>Resource Packs</em>, make sure Security Gear is active. A world you imported or downloaded can carry its own old copy: deactivate it there, save, and activate the new one.',
-    ],
-    upgradeServer: 'On a server, replace the add-on\'s folders in <em>behavior_packs</em> and <em>resource_packs</em> with the new ones and restart it.',
-    upgradeJava: 'Delete the old Security Gear jar from your <em>mods</em> folder and put the new one in its place. Keep only one version in the folder. If the new version needs a newer Fabric API or GeckoLib, update those too.',
-  },
-  da: {
-    title: 'Sikkerhedsudstyr til Minecraft',
-    tagline: 'Overvågningskameraer med levende skærmbilleder, laserstråler, bomber, faldlemme, fængselsmure, rebbroer, vagttårne, vagter og vagthunde.',
-    bedrock: 'Bedrock Edition', bedrockHow: 'Hent .mcaddon-filen og åbn den. Slå derefter Security Gear til under Adfærdspakker for din verden.',
-    java: 'Java Edition (Fabric)', javaHow: 'Læg .jar-filen i din mods-mappe sammen med Fabric API og GeckoLib (Minecraft 26.3).',
-    download: 'Hent', latest: 'Nyeste version', released: 'udgivet', source: 'Kildekode', other: 'English',
-    upgrade: 'Opdatering til en ny version',
-    upgradeSteps: [
-      '<strong>Hent den nye version</strong>, og åbn filen. En nyere version erstatter den, du har, og dine verdener bruger den, næste gang du åbner dem.',
-      '<strong>Kører den gamle version stadig?</strong> (eller siger Minecraft, at den allerede er installeret): Gå til <em>Indstillinger → Lagerplads</em>, slet Security Gear under både <em>Ressourcepakker</em> og <em>Adfærdspakker</em>, og åbn så den nye fil igen.',
-      '<strong>Tjek verdenen:</strong> Sørg for, at Security Gear er slået til under <em>Adfærdspakker</em> og <em>Ressourcepakker</em>, når du redigerer verdenen. En verden, du har importeret eller hentet, kan have sin egen gamle kopi med: Slå den fra dér, gem, og slå den nye til.',
-    ],
-    upgradeServer: 'På en server skal du erstatte tilføjelsens mapper i <em>behavior_packs</em> og <em>resource_packs</em> med de nye og genstarte den.',
-    upgradeJava: 'Slet den gamle Security Gear-jar fra din <em>mods</em>-mappe, og læg den nye i stedet. Hav kun én version i mappen. Kræver den nye version en nyere Fabric API eller GeckoLib, så opdatér dem også.',
-  },
-};
 
 function upscale(buf, k) {
   const src = PNG.sync.read(buf);
@@ -115,7 +90,6 @@ function upscale(buf, k) {
 
 const { version, models } = await build({ quiet: true });
 await mkdir(join(OUT, 'img'), { recursive: true });
-await mkdir(join(OUT, 'da'), { recursive: true });
 
 // Pictures: rendered blocks and entities, upscaled item icons.
 const geos = {};
@@ -139,126 +113,213 @@ for (const section of SECTIONS) {
 }
 await copyFile(join(RP, 'pack_icon.png'), join(OUT, 'img', 'icon.png'));
 await copyFile(join(RP, 'pack_icon.png'), join(OUT, 'favicon.png'));
-await writeFile(join(OUT, 'version.json'), JSON.stringify({ version }));
 
 const releases = `https://github.com/${repo}/releases`;
 const dl = (file) => `${releases}/latest/download/${file}`;
 
+const ROOT_URL = `https://${owner}.github.io/${name}/`;
+
+/** Builds the page for one language. Pages for other languages live in a subfolder. */
 function page(lang) {
-  const t = T[lang];
-  const up = lang === 'en' ? '' : '../';
+  const L = LANGUAGES[lang];
+  const t = STRINGS[lang];
+  const up = L.dir ? '../' : '';
+  const link = (href) => (text) => `<a href="${href}">${esc(text)}</a>`;
+  const home = `${INDEX_URL}${L.dir ? L.dir + '/' : ''}`;
+
   const sections = SECTIONS.map((s) => `
-    <section>
-      <h2>${esc(s.title[lang])}</h2>
-      <div class="grid">${s.gear.map(([id, , en, da]) => {
-        const [title, text] = lang === 'en' ? en : da;
-        return `
-        <article class="card">
-          <img src="${up}img/${id}.png" alt="" width="192" height="192" loading="lazy">
+  <section id="${s.id}">
+    <h2>${esc(s.title[lang])}</h2>
+    <div class="grid">${s.gear.map(([id, , en, da]) => {
+      const [title, text] = lang === 'en' ? en : da;
+      return `
+      <article class="card">
+        <div class="portrait"><img src="${up}img/${id}.png" alt="" loading="lazy" width="192" height="192"></div>
+        <div class="card-body">
           <h3>${esc(title)}</h3>
           <p>${esc(text)}</p>
-        </article>`;
-      }).join('')}
-      </div>
-    </section>`).join('');
-  return `<!doctype html>
-<html lang="${lang}">
+        </div>
+      </article>`;
+    }).join('')}
+    </div>
+  </section>`).join('\n');
+
+  const switcher = Object.entries(LANGUAGES)
+    .filter(([code]) => code !== lang)
+    .map(([code, other]) => `<a class="lang" href="${up}${other.dir ? other.dir + '/' : ''}" hreflang="${other.htmlLang}" lang="${other.htmlLang}">${esc(other.label)}</a>`)
+    .join('');
+  const alternates = Object.values(LANGUAGES)
+    .map((other) => `<link rel="alternate" hreflang="${other.htmlLang}" href="${ROOT_URL}${other.dir ? other.dir + '/' : ''}">`)
+    .join('\n');
+
+const html = `<!doctype html>
+<html lang="${L.htmlLang}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(t.title)}</title>
-<meta name="description" content="${esc(t.tagline)}">
+<meta name="description" content="${esc(t.description)}">
+${alternates}
 <link rel="icon" href="${up}favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500&display=swap" rel="stylesheet">
 <style>
-:root { --bg: #e9ecef; --surface: #ffffff; --ink: #1d2126; --muted: #5a6370; --line: #d3d8de; --accent: #c0281e; --accent-ink: #fff; --hero-from: #0b1026; --hero-to: #28345e; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --bg: #14171b; --surface: #1d2126; --ink: #e8ebee; --muted: #9aa3ad; --line: #2c3238; --accent: #ff5a4c; --accent-ink: #14171b; }
+:root {
+  --bg: #e9ecef; --surface: #ffffff; --ink: #1d2126; --muted: #5a6370; --line: #d3d8de;
+  --accent: #c0281e; --accent-ink: #fff; --accent-2: #3d5a80; --chip: #e1e5ea; --hero-from: #0b1026; --hero-to: #28345e;
 }
-:root[data-theme="dark"] { --bg: #14171b; --surface: #1d2126; --ink: #e8ebee; --muted: #9aa3ad; --line: #2c3238; --accent: #ff5a4c; --accent-ink: #14171b; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14171b; --surface: #1d2126; --ink: #e8ebee; --muted: #9aa3ad; --line: #2c3238;
+    --accent: #ff5a4c; --accent-ink: #14171b; --accent-2: #8fb3d9; --chip: #262b31; --hero-from: #060914; --hero-to: #1b2444;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14171b; --surface: #1d2126; --ink: #e8ebee; --muted: #9aa3ad; --line: #2c3238;
+  --accent: #ff5a4c; --accent-ink: #14171b; --accent-2: #8fb3d9; --chip: #262b31; --hero-from: #060914; --hero-to: #1b2444;
+}
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, sans-serif; }
-header { background: linear-gradient(160deg, var(--hero-from), var(--hero-to)); color: #f2f4f8; padding: 40px 16px 32px; }
-.wrap { max-width: 1080px; margin: 0 auto; }
-.brand { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
-.brand img { width: 96px; height: 96px; image-rendering: pixelated; border-radius: 8px; }
-h1, h2, h3 { font-family: 'Pixelify Sans', system-ui, sans-serif; font-weight: 500; }
-h1 { font-size: clamp(28px, 6vw, 44px); margin: 0; }
-.tagline { max-width: 680px; color: #cfd6e2; }
-.lang { color: #f2f4f8; float: right; }
-.downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 24px; }
-.dl { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 16px; }
-.dl h2 { margin: 0 0 4px; font-size: 20px; }
-.dl p { margin: 0 0 12px; color: #cfd6e2; font-size: 14px; }
-.button { display: inline-block; background: var(--accent); color: #fff; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-weight: 600; }
-.version { margin-top: 16px; color: #cfd6e2; font-size: 14px; }
-main { padding: 8px 16px 48px; }
-section h2 { font-size: 26px; margin: 32px 0 12px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
-.card img { display: block; width: 128px; height: 128px; margin: 0 auto 8px; image-rendering: pixelated; }
-.card h3 { margin: 0 0 4px; font-size: 19px; }
-.card p { margin: 0; color: var(--muted); font-size: 14px; }
-footer { color: var(--muted); text-align: center; padding: 24px 16px 40px; font-size: 14px; }
-footer a { color: var(--accent); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+img { image-rendering: pixelated; max-width: 100%; }
+a { color: var(--accent); }
+h1, h2, h3 { font-family: "Pixelify Sans", system-ui, sans-serif; font-weight: 500; line-height: 1.15; letter-spacing: .01em; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+header.hero { color: #fff8ec; background: linear-gradient(180deg, var(--hero-from), var(--hero-to)); padding: 48px 0 56px; }
+.hero .wrap { display: grid; grid-template-columns: auto 1fr; gap: 32px; align-items: center; }
+.hero img.icon { width: 160px; height: 160px; border-radius: 12px; box-shadow: 0 8px 30px rgb(0 0 0 / .35); }
+.hero h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); margin: 0 0 8px; }
+.hero p { margin: 0 0 20px; font-size: 1.15rem; max-width: 52ch; color: #dfe3f0; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 10px; font-weight: 700; text-decoration: none; background: #ffd36b; color: #2b1d0e; box-shadow: 0 3px 0 #b8862c; }
+.btn:hover { transform: translateY(-1px); }
+.btn.ghost { background: transparent; color: #fff3df; box-shadow: inset 0 0 0 2px rgb(255 243 223 / .6); }
+.version { font-size: .95rem; color: #dfe3f0; }
+.which { margin: 16px 0 6px; background: rgb(0 0 0 / .22); border: 1px solid rgb(255 243 223 / .35); border-radius: 10px; padding: 10px 14px; max-width: 62ch; font-size: .95rem; color: #fff3df; }
+.which b { color: #fff; }
+.hero .langs { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-top: -28px; margin-bottom: 8px; }
+.hero .langs a { color: #fff3df; font-weight: 600; text-decoration: none; padding: 4px 12px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px rgb(255 243 223 / .55); font-size: .9rem; }
+.hero .langs a:hover { background: rgb(255 255 255 / .12); }
+.version strong { color: #fff; }
+main section { padding: 48px 0 8px; }
+h2 { font-size: 2rem; margin: 0 0 8px; }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; padding: 0; list-style: none; counter-reset: s; }
+.steps li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 16px 16px 56px; position: relative; }
+.steps li::before { counter-increment: s; content: counter(s); position: absolute; left: 16px; top: 14px; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; }
+.note { color: var(--muted); font-size: .92rem; }
+h3.edition { margin: 18px 0 10px; font: 700 1.15rem/1.2 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+.portrait { background: radial-gradient(circle at 50% 60%, #c9d1db 0, #9aa6b4 100%); aspect-ratio: 4 / 3; display: grid; place-items: center; }
+.portrait img { width: 60%; height: auto; }
+.card-body { padding: 14px 16px 16px; }
+.card h3 { margin: 0 0 6px; font: 700 1.2rem/1.2 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.card p { margin: 0; }
+footer { margin-top: 56px; padding: 28px 0 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
+@media (max-width: 640px) {
+  .hero .wrap { grid-template-columns: 1fr; text-align: center; justify-items: center; }
+  .hero img.icon { width: 112px; height: 112px; }
+  .actions { justify-content: center; }
+}
 </style>
 </head>
 <body>
-<header>
+<header class="hero">
+  <nav class="langs wrap"><a class="home" href="${home}">← ${esc(t.allMods)}</a><span>${switcher}</span></nav>
   <div class="wrap">
-    <a class="lang" href="${lang === 'en' ? 'da/' : '../'}">${esc(t.other)}</a>
-    <div class="brand">
-      <img src="${up}img/icon.png" alt="" width="96" height="96">
-      <div>
-        <h1>${esc(t.title)}</h1>
-        <p class="tagline">${esc(t.tagline)}</p>
+    <img class="icon" src="${up}img/icon.png" alt="" width="160" height="160">
+    <div>
+      <h1>${esc(t.name)}</h1>
+      <p>${esc(t.tagline)}</p>
+      <div class="actions">
+        <a class="btn" id="download" href="${dl('SecurityGear.mcaddon')}">⬇ ${esc(t.download)}</a>
+        <a class="btn" href="${dl('SecurityGear-fabric.jar')}">⬇ ${esc(t.downloadJava)}</a>
+        <a class="btn ghost" href="${releases}">${esc(t.allVersions)}</a>
       </div>
+      <p class="which">${t.which}</p>
+      <p class="version" id="version">${esc(t.latestVersion)}: <strong>${esc(version)}</strong></p>
     </div>
-    <div class="downloads">
-      <div class="dl">
-        <h2>${esc(t.bedrock)}</h2>
-        <p>${esc(t.bedrockHow)}</p>
-        <a class="button" href="${dl('SecurityGear.mcaddon')}">${esc(t.download)} .mcaddon</a>
-      </div>
-      <div class="dl">
-        <h2>${esc(t.java)}</h2>
-        <p>${esc(t.javaHow)}</p>
-        <a class="button" href="${dl('SecurityGear-fabric.jar')}">${esc(t.download)} .jar</a>
-      </div>
-    </div>
-    <p class="version" id="version">${esc(t.latest)}: <strong>${esc(version)}</strong></p>
   </div>
 </header>
 <main class="wrap">
-    <section>
-      <h2>${esc(t.upgrade)}</h2>
-      <h3>${esc(t.bedrock)}</h3>
-      <ol>${t.upgradeSteps.map((step) => `
-        <li>${step}</li>`).join('')}
-      </ol>
-      <p>${t.upgradeServer}</p>
-      <h3>${esc(t.java)}</h3>
-      <p>${t.upgradeJava}</p>
-    </section>${sections}
+  <section id="install">
+    <h2>${esc(t.install)}</h2>
+    <h3 class="edition">${esc(t.bedrockTitle)}</h3>
+    <ol class="steps">
+${t.steps(`<a href="${dl('SecurityGear.mcaddon')}">SecurityGear.mcaddon</a>`).map((step) => `      <li>${step}</li>`).join('\n')}
+    </ol>
+    <p class="note">${t.serverNote(link(dl('SecurityGear_BP.mcpack')), link(dl('SecurityGear_RP.mcpack')))}</p>
+    <h3 class="edition">${esc(t.javaTitle)}</h3>
+    <ol class="steps">
+${t.javaSteps(
+    `<a href="${dl('SecurityGear-fabric.jar')}">SecurityGear-fabric.jar</a>`,
+    '<a href="https://fabricmc.net/use/installer/">Fabric Loader</a>',
+    '<a href="https://modrinth.com/mod/fabric-api">Fabric API</a>',
+    '<a href="https://modrinth.com/mod/geckolib">GeckoLib</a>',
+  ).map((step) => `      <li>${step}</li>`).join('\n')}
+    </ol>
+    <h3 class="edition">${esc(t.upgradeTitle)}</h3>
+    <ol class="steps">
+${t.upgradeSteps.map((step) => `      <li>${step}</li>`).join('\n')}
+    </ol>
+    <p class="note">${t.upgradeServer}</p>
+    <p class="note">${t.upgradeJava}</p>
+  </section>
+${sections}
 </main>
-<footer><a href="https://github.com/${repo}">${esc(t.source)}</a> · MIT</footer>
+<footer>
+  <div class="wrap">
+    <p>${t.footerSource(link(`https://github.com/${repo}`), link(`https://github.com/${repo}/issues`))}</p>
+    <p>${esc(t.footerLegal)}</p>
+    <p>${link(home)(`← ${t.allMods}`)}</p>
+  </div>
+</footer>
 <script>
+// Latest release from GitHub
 fetch('https://api.github.com/repos/${owner}/${name}/releases/latest')
   .then((r) => (r.ok ? r.json() : null))
   .then((rel) => {
-    if (!rel) return;
-    const date = new Date(rel.published_at).toLocaleDateString('${lang === 'en' ? 'en-GB' : 'da-DK'}');
-    document.getElementById('version').innerHTML = '${t.latest}: <strong>' + rel.tag_name.replace(/^v/, '') + '</strong> · ${t.released} ' + date;
+    if (!rel || !rel.tag_name) return;
+    const date = new Date(rel.published_at).toLocaleDateString('${L.dateLocale}', { year: 'numeric', month: 'long', day: 'numeric' });
+    document.getElementById('version').innerHTML = '${t.latestVersion}: <strong>' + rel.tag_name.replace(/^v/, '') + '</strong> · ${t.released} ' + date;
   })
   .catch(() => {});
+
+// Reload when a new release has been published. The site is redeployed with every release
+// and writes version.json; compare it with the version this page was built with.
+const PAGE_VERSION = '${version}';
+let reloading = false;
+function checkForUpdate() {
+  if (reloading || document.hidden) return;
+  fetch('${up}version.json?t=' + Date.now(), { cache: 'no-store' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((v) => {
+      if (!v || !v.version || v.version === PAGE_VERSION) return;
+      // Reload once per new version: if the cached page is still the old one, don't loop.
+      let tried = null;
+      try { tried = sessionStorage.getItem('security-gear-reloaded-for'); } catch {}
+      if (tried === v.version) return;
+      try { sessionStorage.setItem('security-gear-reloaded-for', v.version); } catch {}
+      reloading = true;
+      location.reload();
+    })
+    .catch(() => {});
+}
+setInterval(checkForUpdate, 10 * 60 * 1000);
+checkForUpdate();
+document.addEventListener('visibilitychange', checkForUpdate);
 </script>
 </body>
 </html>
 `;
+  return html;
 }
 
-await writeFile(join(OUT, 'index.html'), page('en'));
-await writeFile(join(OUT, 'da', 'index.html'), page('da'));
-console.log(`Site written to ${OUT}/ (${name} ${version})`);
+for (const [lang, L] of Object.entries(LANGUAGES)) {
+  const dir = join(OUT, L.dir);
+  await mkdir(dir, { recursive: true });
+  await writeFile(join(dir, 'index.html'), page(lang));
+}
+await writeFile(join(OUT, '.nojekyll'), '');
+await writeFile(join(OUT, 'version.json'), JSON.stringify({ version }) + '\n');
+console.log(`Site written to ${OUT}/ (${name} ${version}, ${Object.keys(LANGUAGES).join(' + ')})`);
