@@ -7,6 +7,7 @@ import dk.ulfen.security.block.AlarmSirenBlock;
 import dk.ulfen.security.block.BridgeDeckBlock;
 import dk.ulfen.security.block.BridgeWinchBlock;
 import dk.ulfen.security.block.CameraBlock;
+import dk.ulfen.security.block.HiddenDoorBlock;
 import dk.ulfen.security.block.KeycardReaderBlock;
 import dk.ulfen.security.block.LaserEmitterBlock;
 import dk.ulfen.security.block.LaserReceiverBlock;
@@ -14,6 +15,7 @@ import dk.ulfen.security.block.MonitorBlock;
 import dk.ulfen.security.block.MotionSensorBlock;
 import dk.ulfen.security.block.PitTrapdoorBlock;
 import dk.ulfen.security.block.SearchlightBlock;
+import dk.ulfen.security.block.SecretPassageBlock;
 import dk.ulfen.security.block.TimedBombBlock;
 import dk.ulfen.security.block.TripwireBombBlock;
 import dk.ulfen.security.block.WireBlock;
@@ -72,6 +74,7 @@ public final class SecRegistry {
 	public static Block REINFORCED_CONCRETE, PRISON_WALL, PRISON_BARS, BARBED_WIRE, RAZOR_WIRE, CELL_DOOR;
 	public static Block SECURITY_CAMERA, MONITOR, LASER_EMITTER, LASER_FENCE, LASER_RECEIVER, MOTION_SENSOR, ALARM_SIREN, SEARCHLIGHT;
 	public static Block KEYCARD_READER, PIT_TRAPDOOR, BRIDGE_WINCH, BRIDGE_DECK, TIMED_BOMB, TRIPWIRE_BOMB;
+	public static Block HIDDEN_DOOR, HIDDEN_SECURITY_DOOR, SECRET_PASSAGE;
 
 	// Block entities
 	public static BlockEntityType<CameraBlockEntity> CAMERA_BE;
@@ -132,6 +135,12 @@ public final class SecRegistry {
 		return BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_GRAY).strength(1.5F, 6.0F).sound(SoundType.METAL).noOcclusion().pushReaction(PushReaction.POPPED);
 	}
 
+	/** Hidden doors and the secret passage: never suffocate or block the view, so walking through them is clean. */
+	private static BlockBehaviour.Properties camouflage(float strength, float blast) {
+		return BlockBehaviour.Properties.of().mapColor(MapColor.STONE).strength(strength, blast).requiresCorrectToolForDrops().noOcclusion()
+			.isRedstoneConductor((s, l, p) -> false).isSuffocating((s, l, p) -> false).isViewBlocking((s, l, p, box) -> false);
+	}
+
 	private static void registerBlocks() {
 		REINFORCED_CONCRETE = block("reinforced_concrete", Block::new, BlockBehaviour.Properties.of().mapColor(MapColor.STONE).strength(25.0F, 1200.0F).requiresCorrectToolForDrops());
 		PRISON_WALL = block("prison_wall", WallBlock::new, BlockBehaviour.Properties.of().mapColor(MapColor.STONE).strength(25.0F, 1200.0F).requiresCorrectToolForDrops().forceSolidOn());
@@ -151,6 +160,9 @@ public final class SecRegistry {
 		SEARCHLIGHT = block("searchlight", SearchlightBlock::new, device().strength(2.0F, 6.0F).lightLevel(s -> s.getValue(SearchlightBlock.POWERED) ? 15 : 0));
 		KEYCARD_READER = block("keycard_reader", KeycardReaderBlock::new, device().strength(5.0F, 1200.0F));
 		PIT_TRAPDOOR = block("pit_trapdoor", PitTrapdoorBlock::new, BlockBehaviour.Properties.of().mapColor(MapColor.STONE).strength(2.0F, 6.0F).requiresCorrectToolForDrops().noOcclusion().isRedstoneConductor((s, l, p) -> false));
+		HIDDEN_DOOR = block("hidden_door", p -> new HiddenDoorBlock(p, true), camouflage(2.0F, 6.0F));
+		HIDDEN_SECURITY_DOOR = block("hidden_security_door", p -> new HiddenDoorBlock(p, false), camouflage(5.0F, 1200.0F));
+		SECRET_PASSAGE = block("secret_passage", SecretPassageBlock::new, camouflage(2.0F, 6.0F).noCollision());
 		BRIDGE_WINCH = block("bridge_winch", BridgeWinchBlock::new, BlockBehaviour.Properties.of().mapColor(MapColor.WOOD).strength(2.5F).sound(SoundType.WOOD));
 		BRIDGE_DECK = blockOnly("bridge_deck", BridgeDeckBlock::new, BlockBehaviour.Properties.of().mapColor(MapColor.WOOD).strength(1.0F).sound(SoundType.WOOD).noOcclusion().noLootTable().pushReaction(PushReaction.IMMOVEABLE));
 		TIMED_BOMB = block("timed_bomb", TimedBombBlock::new, BlockBehaviour.Properties.of().mapColor(MapColor.FIRE).instabreak().sound(SoundType.GRASS).noOcclusion().pushReaction(PushReaction.POPPED));
@@ -217,7 +229,7 @@ public final class SecRegistry {
 			.icon(() -> new ItemStack(SECURITY_CAMERA))
 			.displayItems((params, out) -> {
 				for (Block b : new Block[] {SECURITY_CAMERA, MONITOR, LASER_EMITTER, LASER_FENCE, LASER_RECEIVER, MOTION_SENSOR, ALARM_SIREN, SEARCHLIGHT,
-					KEYCARD_READER, CELL_DOOR, PRISON_BARS, PRISON_WALL, REINFORCED_CONCRETE, BARBED_WIRE, RAZOR_WIRE, PIT_TRAPDOOR, BRIDGE_WINCH,
+					KEYCARD_READER, CELL_DOOR, PRISON_BARS, PRISON_WALL, REINFORCED_CONCRETE, BARBED_WIRE, RAZOR_WIRE, PIT_TRAPDOOR, HIDDEN_DOOR, HIDDEN_SECURITY_DOOR, SECRET_PASSAGE, BRIDGE_WINCH,
 					TIMED_BOMB, TRIPWIRE_BOMB}) out.accept(b);
 				for (Item i : new Item[] {CAMERA_LINKER, GUARD_KEYCARD, OFFICER_KEYCARD, WARDEN_KEYCARD, BATON, GUARD_TOWER_BLUEPRINT, PRISON_CELL_BLUEPRINT,
 					GATEHOUSE_BLUEPRINT, SECURITY_GUARD_SPAWN_EGG, CRIMINAL_SPAWN_EGG, BRUTE_SPAWN_EGG, GUARD_DOG_SPAWN_EGG}) out.accept(i);

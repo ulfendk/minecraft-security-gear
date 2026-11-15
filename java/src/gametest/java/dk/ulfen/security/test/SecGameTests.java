@@ -11,6 +11,8 @@ import com.google.gson.JsonParser;
 import dk.ulfen.security.SecRegistry;
 import dk.ulfen.security.SecurityGear;
 import dk.ulfen.security.block.BridgeWinchBlock;
+import dk.ulfen.security.block.Disguise;
+import dk.ulfen.security.block.HiddenDoorBlock;
 import dk.ulfen.security.block.KeycardReaderBlock;
 import dk.ulfen.security.block.LaserEmitterBlock;
 import dk.ulfen.security.block.LaserReceiverBlock;
@@ -139,6 +141,80 @@ public class SecGameTests {
 				helper.succeed();
 			}
 		});
+	}
+
+	private static void click(GameTestHelper helper, ServerPlayer player, ItemStack stack, BlockPos pos, Direction face) {
+		player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+		BlockPos abs = helper.absolutePos(pos);
+		player.gameMode.useItemOn(player, helper.getLevel(), player.getMainHandItem(), InteractionHand.MAIN_HAND,
+				new BlockHitResult(Vec3.atCenterOf(abs).relative(face, 0.5), face, abs, false));
+	}
+
+	/** Placed against a cobblestone wall, a hidden door looks like cobblestone; using oak planks on it changes the whole door. */
+	@GameTest(maxTicks = 1)
+	public void hiddenDoorCopiesWall(GameTestHelper helper) {
+		helper.setBlock(new BlockPos(1, 1, 1), Blocks.COBBLESTONE);
+		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		click(helper, player, new ItemStack(SecRegistry.HIDDEN_DOOR), new BlockPos(1, 1, 1), Direction.EAST);
+		helper.assertBlockProperty(new BlockPos(2, 1, 1), Disguise.PROPERTY, Disguise.COBBLESTONE);
+		// Like a vanilla door, a plain click opens it, so sneak to build on it.
+		player.setShiftKeyDown(true);
+		click(helper, player, new ItemStack(SecRegistry.HIDDEN_DOOR), new BlockPos(2, 1, 1), Direction.UP);
+		player.setShiftKeyDown(false);
+		helper.assertBlockProperty(new BlockPos(2, 2, 1), Disguise.PROPERTY, Disguise.COBBLESTONE);
+		click(helper, player, new ItemStack(Blocks.OAK_PLANKS), new BlockPos(2, 2, 1), Direction.EAST);
+		helper.assertBlockProperty(new BlockPos(2, 1, 1), Disguise.PROPERTY, Disguise.OAK_PLANKS);
+		helper.assertBlockProperty(new BlockPos(2, 2, 1), Disguise.PROPERTY, Disguise.OAK_PLANKS);
+		helper.assertBlockNotPresent(Blocks.OAK_PLANKS, new BlockPos(3, 2, 1));
+		helper.succeed();
+	}
+
+	/** Redstone opens a two-high hidden door (both blocks, no collision); it closes again once the signal is gone. */
+	@GameTest(maxTicks = 200)
+	public void hiddenDoorOpensWithRedstone(GameTestHelper helper) {
+		BlockPos low = new BlockPos(2, 1, 2), high = low.above();
+		helper.setBlock(low, SecRegistry.HIDDEN_DOOR);
+		helper.setBlock(high, SecRegistry.HIDDEN_DOOR);
+		helper.setBlock(new BlockPos(1, 1, 2), Blocks.REDSTONE_BLOCK);
+		int[] phase = {0};
+		helper.onEachTick(() -> {
+			boolean open = helper.getBlockState(low).getValue(HiddenDoorBlock.OPEN) && helper.getBlockState(high).getValue(HiddenDoorBlock.OPEN);
+			if (phase[0] == 0 && open) {
+				helper.assertTrue(helper.getBlockState(high).getCollisionShape(helper.getLevel(), helper.absolutePos(high)).isEmpty(), "open door still solid");
+				phase[0] = 1;
+				helper.setBlock(new BlockPos(1, 1, 2), Blocks.AIR);
+			} else if (phase[0] == 1 && !helper.getBlockState(low).getValue(HiddenDoorBlock.OPEN) && !helper.getBlockState(high).getValue(HiddenDoorBlock.OPEN)) {
+				helper.succeed();
+			}
+		});
+	}
+
+	/** A hand opens the hidden door, but not the hidden security door; a keycard reader on the wall beside it does. */
+	@GameTest(maxTicks = 40)
+	public void hiddenSecurityDoorNeedsKeycard(GameTestHelper helper) {
+		BlockPos door = new BlockPos(1, 1, 2), secure = new BlockPos(4, 1, 2);
+		helper.setBlock(door, SecRegistry.HIDDEN_DOOR);
+		helper.setBlock(secure, SecRegistry.HIDDEN_SECURITY_DOOR);
+		ServerPlayer player = helper.makeMockServerPlayerInLevel();
+		click(helper, player, ItemStack.EMPTY, door, Direction.NORTH);
+		click(helper, player, ItemStack.EMPTY, secure, Direction.NORTH);
+		helper.assertBlockProperty(door, HiddenDoorBlock.OPEN, true);
+		helper.assertBlockProperty(secure, HiddenDoorBlock.OPEN, false);
+		// The reader hangs on the wall next to the door and powers that wall.
+		helper.setBlock(new BlockPos(5, 1, 2), Blocks.STONE_BRICKS);
+		BlockPos reader = new BlockPos(5, 1, 1);
+		helper.setBlock(reader, SecRegistry.KEYCARD_READER.defaultBlockState().setValue(KeycardReaderBlock.FACING, Direction.NORTH));
+		((KeycardReaderBlock) SecRegistry.KEYCARD_READER).swipe(helper.getLevel(), helper.absolutePos(reader), helper.getBlockState(reader), null, 1);
+		helper.succeedWhen(() -> helper.assertBlockProperty(secure, HiddenDoorBlock.OPEN, true));
+	}
+
+	/** The secret passage looks solid but has nothing to bump into. */
+	@GameTest(maxTicks = 1)
+	public void secretPassageIsWalkThrough(GameTestHelper helper) {
+		BlockPos pos = new BlockPos(1, 1, 1);
+		helper.setBlock(pos, SecRegistry.SECRET_PASSAGE);
+		helper.assertTrue(helper.getBlockState(pos).getCollisionShape(helper.getLevel(), helper.absolutePos(pos)).isEmpty(), "secret passage is solid");
+		helper.succeed();
 	}
 
 	/** A reader set to Officer refuses a Guard card and accepts a Warden card. */

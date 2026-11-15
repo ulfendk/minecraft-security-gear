@@ -2,7 +2,8 @@
 // Builds small test rigs in a flat world and logs SELFTEST PASS/FAIL lines.
 import { BlockPermutation, system, world } from '@minecraft/server';
 import { buildStructure } from './blueprints.js';
-import { grantAccess } from './devices.js';
+import { DATA } from './data.js';
+import { disguiseFor, grantAccess } from './devices.js';
 import { NS } from './util.js';
 
 const wait = (ticks) => new Promise((r) => system.runTimeout(r, ticks));
@@ -72,6 +73,30 @@ async function run() {
   check('reader_opens_door', state(16, Y, 20, 'open') === true);
   await wait(100);
   check('reader_door_closes', state(16, Y, 20, 'open') === false, `(reader powered: ${state(17, Y + 1, 20, 'powered')})`);
+
+  // Camouflage: every disguise block id exists, and a hidden door copies the wall it is placed in.
+  const unknown = Object.keys(DATA.disguises).filter((id) => { try { BlockPermutation.resolve(id); return false; } catch { return true; } });
+  check('disguise_blocks_exist', unknown.length === 0, `(${unknown.join(', ')})`);
+  for (let y = Y; y <= Y + 1; y++) for (const x of [30, 32]) set(x, y, 30, 'minecraft:cobblestone');
+  set(31, Y, 30, `${NS}:hidden_door`, { [`${NS}:disguise`]: 'stone_bricks' });
+  set(31, Y + 1, 30, `${NS}:hidden_door`, { [`${NS}:disguise`]: 'stone_bricks' });
+  check('disguise_copies_wall', disguiseFor(dim.getBlock({ x: 31, y: Y, z: 30 })) === 'stone_bricks' && disguiseFor(dim.getBlock({ x: 32, y: Y + 2, z: 30 })) === 'cobblestone');
+  // Redstone opens the whole 1x2 door; it closes again once the signal is gone.
+  set(31, Y, 29, 'minecraft:redstone_block');
+  await wait(10);
+  check('hidden_door_opens', state(31, Y, 30, 'open') === true && state(31, Y + 1, 30, 'open') === true);
+  set(31, Y, 29, 'minecraft:air');
+  await wait(70);
+  check('hidden_door_closes', state(31, Y, 30, 'open') === false && state(31, Y + 1, 30, 'open') === false);
+  // A keycard reader opens a hidden security door next to it.
+  set(34, Y, 30, `${NS}:hidden_security_door`, { [`${NS}:disguise`]: 'cobblestone' });
+  set(35, Y, 30, `${NS}:keycard_reader`, { 'minecraft:cardinal_direction': 'east' });
+  await wait(5);
+  grantAccess(dim.getBlock({ x: 35, y: Y, z: 30 }));
+  await wait(10);
+  check('reader_opens_hidden_door', state(34, Y, 30, 'open') === true);
+  set(37, Y, 30, `${NS}:secret_passage`, { [`${NS}:disguise`]: 'bricks' });
+  check('secret_passage', state(37, Y, 30, 'disguise') === 'bricks');
 
   // Blueprints
   for (const [i, name] of ['guard_tower', 'prison_cell', 'gatehouse'].entries()) {

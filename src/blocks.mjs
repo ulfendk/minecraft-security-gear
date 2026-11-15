@@ -5,6 +5,7 @@ import {
   bedrockBox, bedrockGeometry, blockId, box, cardinalPermutations, facingPermutations, facingVariants, horizontalVariants,
 } from './lib/blockmodel.mjs';
 import * as tx from './textures.mjs';
+import { DISGUISES, disguiseTexture } from './disguises.mjs';
 
 // ---------------------------------------------------------------- textures
 
@@ -286,6 +287,46 @@ function doorModels(name) {
           textures: { bottom: blockId('cell_door_bottom'), top: blockId('cell_door_top') },
         };
   return out;
+}
+
+// ---------------------------------------------------------------- camouflaged blocks
+
+/**
+ * Hidden doors and the secret passage: full blocks that look like whichever wall
+ * block they copy (see src/disguises.mjs). Java points each disguise at the
+ * vanilla block model; Bedrock swaps in the vanilla texture per permutation.
+ */
+function camouflageBlock({ id, name, door = false, handOpens = false, hardness, blast, icon, recipe }) {
+  const variants = {};
+  for (const d of DISGUISES) {
+    if (door) {
+      variants[`disguise=${d.name},open=false`] = { model: d.java.model };
+      variants[`disguise=${d.name},open=true`] = { model: blockId('hidden_door_open') };
+    } else variants[`disguise=${d.name}`] = { model: d.java.model };
+  }
+  return {
+    id,
+    name,
+    java: {
+      models: door ? { hidden_door_open: particleOnly('minecraft:block/stone_bricks') } : {},
+      blockstate: { variants },
+      item: { icon: id, png: icon },
+    },
+    bedrock: {
+      geometry: 'minecraft:geometry.full_block',
+      disguise: true,
+      hiddenDoor: door,
+      components: {
+        ...base({ hardness, blast, map: '#7b7b7b', collision: door }),
+        'minecraft:material_instances': { '*': { texture: disguiseTexture('stone_bricks'), render_method: 'opaque' } },
+        [`${NS}:camouflage`]: { hand_opens: handOpens },
+        ...(door ? { 'minecraft:tick': { interval_range: [4, 4], looping: true }, [`${NS}:hidden_door`]: {} } : {}),
+      },
+      menu: 'construction',
+    },
+    sound: 'stone',
+    recipe,
+  };
 }
 
 // ---------------------------------------------------------------- the blocks
@@ -575,6 +616,33 @@ export const blocks = [
     sound: 'stone',
     recipe: shaped('pit_trapdoor', ['S', 'T'], { S: 'stone_bricks', T: 'iron_trapdoor' }),
   },
+  camouflageBlock({
+    id: 'hidden_door',
+    name: names('Hidden Door', 'Skjult dør'),
+    door: true,
+    handOpens: true,
+    hardness: 2,
+    blast: 6,
+    icon: tx.hiddenDoorIcon(),
+    recipe: shaped('hidden_door', ['S', 'P'], { S: 'stone_bricks', P: 'piston' }, 2),
+  }),
+  camouflageBlock({
+    id: 'hidden_security_door',
+    name: names('Hidden Security Door', 'Skjult sikkerhedsdør'),
+    door: true,
+    hardness: 5,
+    blast: 1200,
+    icon: tx.hiddenSecurityDoorIcon(),
+    recipe: shaped('hidden_security_door', ['R', 'P'], { R: id('reinforced_concrete'), P: 'piston' }, 2),
+  }),
+  camouflageBlock({
+    id: 'secret_passage',
+    name: names('Secret Passage', 'Hemmelig gang'),
+    hardness: 2,
+    blast: 6,
+    icon: tx.secretPassageIcon(),
+    recipe: shaped('secret_passage', ['SSS', 'SES', 'SSS'], { S: 'stone_bricks', E: 'ender_pearl' }, 8),
+  }),
   {
     id: 'bridge_winch',
     name: names('Bridge Winch', 'Brospil'),

@@ -314,6 +314,38 @@ export function pitTrapdoor() {
   return c.png();
 }
 
+/** Item icons for the camouflaged blocks: stone bricks with a faint outline of what hides in them. */
+function camouflageIcon(outline) {
+  const c = stoneBricks(3);
+  for (const [x, y] of outline) c.set(x, y, (o) => shade(o, 0.62));
+  return c;
+}
+
+const doorOutline = () => {
+  const px = [];
+  for (let y = 2; y < 16; y++) px.push([3, y], [12, y]);
+  for (let x = 4; x < 12; x++) px.push([x, 2]);
+  return px;
+};
+
+export function hiddenDoorIcon() {
+  return camouflageIcon(doorOutline()).rect(10, 9, 1, 1, '#c9a227').png();
+}
+
+export function hiddenSecurityDoorIcon() {
+  const c = camouflageIcon(doorOutline());
+  c.rect(13, 7, 2, 4, '#2f3236').rect(13, 8, 1, 1, '#3ad13a');
+  return c.png();
+}
+
+export function secretPassageIcon() {
+  // A round arch you can walk through.
+  const px = [];
+  for (let y = 7; y < 16; y++) px.push([3, y], [12, y]);
+  for (const [x, y] of [[3, 6], [4, 5], [4, 4], [5, 3], [6, 3], [7, 2], [8, 2], [9, 3], [10, 3], [11, 4], [11, 5], [12, 6]]) px.push([x, y]);
+  return camouflageIcon(px).png();
+}
+
 export function pitTrapdoorUnderside() {
   const c = new Canvas(16, 16, '#4f4a44').noise(0.05, 71);
   for (const y of [3, 12]) c.rect(1, y, 14, 1, '#3a3631');

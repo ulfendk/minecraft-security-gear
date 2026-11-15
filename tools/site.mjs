@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { PNG } from 'pngjs';
 import { build } from './build.mjs';
 import { blockAtlas, render } from './render.mjs';
-import { TEXTURES } from '../src/blocks.mjs';
+import { blocks, TEXTURES } from '../src/blocks.mjs';
 import { items } from '../src/items.mjs';
 import { LANGUAGES, STRINGS } from '../src/i18n.mjs';
 
@@ -55,11 +55,14 @@ const SECTIONS = [
   },
   {
     id: 'traps',
-    title: { en: 'Traps and bombs', da: 'Fælder og bomber' },
+    title: { en: 'Traps, bombs and hiding places', da: 'Fælder, bomber og skjulesteder' },
     gear: [
       ['pit_trapdoor', 'block:pit_trapdoor_open', ['Pit Trapdoor', 'Looks just like stone bricks. Step on it and the whole pit swings open, then closes again.'], ['Faldlem', 'Ligner helt almindelige stenmursten. Træd på den, og hele graven åbner sig og lukker igen.']],
       ['timed_bomb', 'block:timed_bomb', ['Timed Bomb', 'Use it to choose a 5, 10, 30 or 60 second fuse, sneak and use it (or power it) to arm it. It beeps as it counts down. Shears defuse it.'], ['Tidsindstillet bombe', 'Brug den for at vælge 5, 10, 30 eller 60 sekunders lunte, snig og brug den (eller giv den strøm) for at aktivere den. Den bipper, mens den tæller ned. En saks desarmerer den.']],
       ['tripwire_bomb', 'block:tripwire_bomb', ['Tripwire Bomb', 'Strings a thin wire up to 8 blocks. Crossing it, or a redstone signal, sets it off.'], ['Snubletrådsbombe', 'Spænder en tynd tråd ud på op til 8 blokke. Krydser man den, eller får den et redstone-signal, springer den.']],
+      ['hidden_door', 'icon:hidden_door', ['Hidden Door', 'Built into a wall, it looks just like the wall around it: stone bricks, cobblestone, planks, concrete and more. Use it, or power it, and it slides away together with the hidden doors joined to it, then closes again. Use a wall block on it to change its look.'], ['Skjult dør', 'Bygget ind i en mur ligner den helt muren omkring den: stenmursten, brosten, planker, beton og mere. Brug den, eller giv den strøm, så glider den væk sammen med de skjulte døre, den hænger sammen med, og lukker igen. Brug en murblok på den for at ændre dens udseende.']],
+      ['hidden_security_door', 'icon:hidden_security_door', ['Hidden Security Door', 'A hidden door that can’t be opened by hand. Only redstone or a keycard reader opens it, and it is blast proof.'], ['Skjult sikkerhedsdør', 'En skjult dør, der ikke kan åbnes med hånden. Kun redstone eller en nøglekortlæser åbner den, og den er bombesikker.']],
+      ['secret_passage', 'icon:secret_passage', ['Secret Passage', 'A false wall that looks like the wall it is built into, but you can walk straight through it.'], ['Hemmelig gang', 'En falsk mur, der ligner muren, den er bygget ind i, men man kan gå lige igennem den.']],
     ],
   },
   {
@@ -102,6 +105,7 @@ for (const section of SECTIONS) {
     const [kind, ref] = image.split(':');
     let png;
     if (kind === 'item') png = upscale(items.find((i) => i.id === ref).icon, 12);
+    else if (kind === 'icon') png = upscale(blocks.find((b) => b.id === ref).java.item.png, 12);
     else if (kind === 'entity') png = render(models[ref].geometry, models[ref].texture, { yaw: 35, size: 192, hidden: new Set(['ceiling_mount']) });
     else if (ref === 'searchlight') png = render({ format_version: '1.12.0', 'minecraft:geometry': [geos.searchlight] }, models.searchlight.litTexture, { yaw: 35, size: 192 });
     else {

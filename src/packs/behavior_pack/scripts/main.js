@@ -2,8 +2,8 @@
 import { system, world } from '@minecraft/server';
 import { onInteractEntity, onMonitorInteract, placeCamera } from './cameras.js';
 import {
-  bombBroken, bombInteract, bombTick, doorBeforePlace, doorBroken, doorPlaced, doorTick, laserTick, motionTick, pitStepOn, pitTick,
-  readerInteract, searchlightTick, sirenTick, tripwireTick, winchBroken, winchTick, wireTick,
+  bombBroken, bombInteract, bombTick, camoBeforePlace, camoInteract, doorBeforePlace, doorBroken, doorPlaced, doorTick, hiddenTick,
+  laserTick, motionTick, pitStepOn, pitTick, readerInteract, searchlightTick, sirenTick, tripwireTick, winchBroken, winchTick, wireTick,
 } from './devices.js';
 import { useBlueprint } from './blueprints.js';
 import { NS } from './util.js';
@@ -18,6 +18,8 @@ system.beforeEvents.startup.subscribe(({ blockComponentRegistry: blocks, itemCom
   blocks.registerCustomComponent(`${NS}:keycard_reader`, { onPlayerInteract: readerInteract });
   blocks.registerCustomComponent(`${NS}:monitor`, { onPlayerInteract: onMonitorInteract });
   blocks.registerCustomComponent(`${NS}:cell_door`, { beforeOnPlayerPlace: doorBeforePlace, onPlace: doorPlaced, onPlayerBreak: doorBroken, onTick: doorTick });
+  blocks.registerCustomComponent(`${NS}:camouflage`, { beforeOnPlayerPlace: camoBeforePlace, onPlayerInteract: camoInteract });
+  blocks.registerCustomComponent(`${NS}:hidden_door`, { onTick: hiddenTick });
   blocks.registerCustomComponent(`${NS}:pit_trapdoor`, { onStepOn: pitStepOn, onTick: pitTick });
   blocks.registerCustomComponent(`${NS}:wire`, { onTick: wireTick });
   blocks.registerCustomComponent(`${NS}:winch`, { onTick: winchTick, onPlayerBreak: winchBroken });

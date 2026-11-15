@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.0] - 2026-11-15
+- Camouflaged blocks that can't be seen once they're built into a wall, on both editions. They copy the wall block they are placed next to: stone bricks, cobblestone, stone, mossy stone bricks, deepslate bricks, bricks, oak, spruce, birch or dark oak planks, smooth stone, andesite, white concrete or reinforced concrete. Use one of those blocks on them to change their look.
+  - **Hidden Door**: opens when you use it, power it or swipe a keycard at a reader next to it, together with every hidden door joined to it. It closes again 3 seconds later, once the doorway is clear.
+  - **Hidden Security Door**: like the hidden door, but only redstone or a keycard reader opens it, and it is blast proof.
+  - **Secret Passage**: a false wall you can walk straight through.
+
 ## [0.3.0] - 2026-10-21
 - The Brute, a bigger criminal on both editions: a muscular inmate in an orange or striped tank top, with tattooed arms, a shaved head and a scar. He has twice the health, hits hard, is hard to push back and isn't afraid of guard dogs. Spawn him with the Brute spawn egg.
 

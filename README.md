@@ -1,6 +1,6 @@
 # Security Gear
 
-A Minecraft **Bedrock Edition** add-on and **Java Edition** (Fabric) mod full of security gear: security cameras with monitors that show the camera's live picture, laser tripwires and laser fences, motion sensors, alarm sirens, searchlights, keycard readers and cell doors, prison walls and bars, barbed and razor wire, pit trapdoors, timed and tripwire bombs, winding rope bridges, blueprints for guard towers, prison cells and gatehouses, security guards with guard dogs, and criminals to lock up.
+A Minecraft **Bedrock Edition** add-on and **Java Edition** (Fabric) mod full of security gear: security cameras with monitors that show the camera's live picture, laser tripwires and laser fences, motion sensors, alarm sirens, searchlights, keycard readers and cell doors, prison walls and bars, barbed and razor wire, pit trapdoors, hidden doors and secret passages, timed and tripwire bombs, winding rope bridges, blueprints for guard towers, prison cells and gatehouses, security guards with guard dogs, and criminals to lock up.
 
 **Download and info: https://ulfendk.github.io/minecraft-security-gear/** (på dansk: https://ulfendk.github.io/minecraft-security-gear/da/)
 
@@ -14,6 +14,10 @@ A Minecraft **Bedrock Edition** add-on and **Java Edition** (Fabric) mod full of
 - **Keycard readers** and **Guard, Officer and Warden keycards** open the **cell door** next to the reader.
 - **Prison walls, reinforced concrete and prison bars** are hard and blast proof. **Barbed and razor wire** slow you down and cut.
 - **Pit trapdoors** look like stone bricks. Step on one and the whole pit swings open, then closes again.
+- **Hidden doors, hidden security doors and secret passages** look exactly like the wall they are built into. When placed they copy the wall block next to them: stone bricks, cobblestone, stone, mossy stone bricks, deepslate bricks, bricks, oak, spruce, birch or dark oak planks, smooth stone, andesite, white concrete or reinforced concrete. Use one of those blocks on them to change their look.
+  - A **hidden door** opens when you use it, power it or swipe a keycard at a reader next to it. Every hidden door joined to it opens too, so you can build doorways of any size. It closes again 3 seconds later, once the doorway is clear.
+  - A **hidden security door** can't be opened by hand (only redstone or a keycard reader) and is blast proof.
+  - A **secret passage** is a false wall: you can walk straight through it.
 - **Timed bombs** take a 5, 10, 30 or 60 second fuse, beep as they count down, and can be defused with shears. **Tripwire bombs** string a wire up to 8 blocks. Both respect the TNT game rule.
 - **Bridge winches** wind out a rope bridge, plank by plank, when powered, and wind it back in without power.
 - **Blueprints** build a guard tower (with a searchlight and a guard), a prison cell (with a keycard door and an inmate) or a gatehouse (with a laser fence, a camera and a monitor), right in front of you.

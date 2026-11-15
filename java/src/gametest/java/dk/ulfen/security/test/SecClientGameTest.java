@@ -91,6 +91,21 @@ public class SecClientGameTest implements FabricClientGameTest {
 			context.waitTicks(40);
 			context.takeScreenshot("secgear_gallery");
 
+			// A stone brick wall with a hidden door (x 0) and a secret passage (x 3): closed, then the door opened.
+			server.runCommand("fill -12 -60 -12 12 -50 12 air");
+			server.runCommand("tp @e[type=!player] 0 -200 0");
+			server.runCommand("fill -4 -60 2 4 -57 2 stone_bricks");
+			server.runCommand("fill 0 -60 2 0 -59 2 secgear:hidden_door[disguise=stone_bricks]");
+			server.runCommand("setblock 3 -60 2 secgear:secret_passage[disguise=stone_bricks]");
+			server.runCommand("setblock 3 -59 2 secgear:secret_passage[disguise=stone_bricks]");
+			server.runCommand("tp @p 0.5 -59 -4 0 5");
+			context.waitTicks(30);
+			context.takeScreenshot("secgear_hidden_door_closed");
+			server.runCommand("setblock 0 -61 2 redstone_block");
+			context.waitTicks(20);
+			context.takeScreenshot("secgear_hidden_door_open");
+			server.runCommand("setblock 0 -61 2 stone");
+
 			// The criminals, one in each outfit, lined up between a guard and the brute.
 			server.runCommand("fill -12 -60 -12 12 -50 12 air");
 			server.runCommand("tp @e[type=!player] 0 -200 0");

@@ -1,6 +1,7 @@
 // Lasers, receivers, motion sensors, sirens, searchlights, keycard readers,
-// cell doors, pit trapdoors, wire, the winding bridge and bombs.
+// cell doors, hidden doors, pit trapdoors, wire, the winding bridge and bombs.
 import { BlockPermutation, system, world } from '@minecraft/server';
+import { DATA } from './data.js';
 import {
   add, centre, DIR, front, getState, heldItem, ignorable, key, NS, powered, seeThrough, setState, store, tell,
 } from './util.js';
@@ -176,7 +177,7 @@ function openNearbyDoors(block, ticks) {
         if (b?.typeId === `${NS}:cell_door`) {
           doorTimers.set(key(b), system.currentTick + ticks);
           setDoor(b, true);
-        }
+        } else if (HIDDEN_DOORS.has(b?.typeId)) openHidden(b, ticks);
       }
 }
 
@@ -209,6 +210,84 @@ export function doorTick({ block }) {
   const held = (doorTimers.get(key(block)) ?? 0) > system.currentTick;
   const on = held || powered(block) || powered(block.above());
   setDoor(block, on);
+}
+
+// ---------------------------------------------------------------- camouflage: hidden doors and secret passages
+
+const HIDDEN_DOORS = new Set([`${NS}:hidden_door`, `${NS}:hidden_security_door`]);
+const AROUND = ['north', 'east', 'south', 'west', 'up', 'down'];
+const hiddenTimers = new Map(); // key -> earliest close tick
+
+const disguiseOf = (b) => (b ? getState(b, 'disguise') ?? DATA.disguises[b.typeId] : undefined);
+
+const OPPOSITE = { Up: 'down', Down: 'up', North: 'south', South: 'north', East: 'west', West: 'east' };
+
+/**
+ * The look for a camouflaged block: the block it was placed against (`face` is the
+ * face that was clicked), else a camouflaged neighbour's, else any neighbouring wall block's, else stone bricks.
+ */
+export function disguiseFor(block, face) {
+  const against = face && disguiseOf(block.offset(DIR[OPPOSITE[face]]));
+  if (against) return against;
+  const around = AROUND.map((d) => block.offset(DIR[d]));
+  return around.map((b) => b && getState(b, 'disguise')).find(Boolean)
+    ?? around.map((b) => b && DATA.disguises[b.typeId]).find(Boolean)
+    ?? 'stone_bricks';
+}
+
+/** This block and every block of the same kind joined to it (up to 32). */
+function group(block) {
+  const seen = new Map();
+  const queue = [block];
+  while (queue.length && seen.size < 32) {
+    const b = queue.shift();
+    if (!b || b.typeId !== block.typeId || seen.has(key(b))) continue;
+    seen.set(key(b), b);
+    for (const d of AROUND) queue.push(b.offset(DIR[d]));
+  }
+  return [...seen.values()];
+}
+
+export function camoBeforePlace(e) {
+  e.permutationToPlace = e.permutationToPlace.withState(`${NS}:disguise`, disguiseFor(e.block, e.face));
+}
+
+export function camoInteract({ block, player }, { params }) {
+  if (!player) return;
+  const look = DATA.disguises[heldItem(player)?.typeId];
+  if (look && !player.isSneaking) {
+    for (const b of group(block)) setState(b, 'disguise', look);
+    block.dimension.playSound('use.stone', centre(block), { pitch: 0.8 });
+    return;
+  }
+  if (params?.hand_opens && !getState(block, 'open')) openHidden(block, 60);
+}
+
+/** Open a hidden door and every hidden door joined to it, for at least `ticks`. */
+export function openHidden(block, ticks = 60) {
+  const door = group(block);
+  for (const b of door) {
+    setState(b, 'open', true);
+    hiddenTimers.set(key(b), system.currentTick + ticks);
+  }
+  block.dimension.playSound('tile.piston.in', centre(block), { pitch: 0.7, volume: 0.6 });
+}
+
+export function hiddenTick({ block }) {
+  if (powered(block)) {
+    if (!getState(block, 'open')) openHidden(block, 20);
+    for (const b of group(block)) hiddenTimers.set(key(b), system.currentTick + 20);
+    return;
+  }
+  if (!getState(block, 'open') || (hiddenTimers.get(key(block)) ?? 0) > system.currentTick) return;
+  const door = group(block);
+  const busy = door.some((b) => b.dimension.getEntities({ location: centre(b), maxDistance: 0.9 }).some((e) => !ignorable(e)));
+  if (busy) return;
+  for (const b of door) {
+    hiddenTimers.delete(key(b));
+    setState(b, 'open', false);
+  }
+  block.dimension.playSound('tile.piston.out', centre(block), { pitch: 0.7, volume: 0.6 });
 }
 
 // ---------------------------------------------------------------- pit trapdoor

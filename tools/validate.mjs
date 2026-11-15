@@ -5,6 +5,7 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { PNG } from 'pngjs';
 import { NS } from '../src/lib/constants.mjs';
+import { DISGUISE_NAMES } from '../src/disguises.mjs';
 
 const BP = 'build/behavior_pack';
 const RP = 'build/resource_pack';
@@ -51,6 +52,8 @@ for (const f of await files(join(RP, 'models'), '.json')) {
 const terrain = (await json(join(RP, 'textures', 'terrain_texture.json'))).texture_data;
 const itemTextures = (await json(join(RP, 'textures', 'item_texture.json'))).texture_data;
 for (const [k, v] of Object.entries({ ...terrain, ...itemTextures })) {
+  // Camouflage textures may come from the game's own resource pack.
+  if (k.startsWith(`${NS}_disguise_`) && !v.textures.startsWith(`textures/blocks/${NS}/`)) continue;
   if (!(await exists(join(RP, `${v.textures}.png`)))) err(`texture ${k}: missing ${v.textures}.png`);
 }
 const en = await langFile(join(RP, 'texts', 'en_US.lang'));
@@ -150,6 +153,11 @@ for (const f of await files('java/src', '.java')) {
   }
 }
 for (const f of await files(join(JD, 'recipe'), '.json')) await json(f);
+
+// The Java Disguise enum must list the same disguises, in the same order.
+const disguiseSrc = await readFile('java/src/main/java/dk/ulfen/security/block/Disguise.java', 'utf8');
+const javaDisguises = [...disguiseSrc.matchAll(/^\t[A-Z_]+\("(\w+)"/gm)].map((m) => m[1]);
+if (javaDisguises.join() !== DISGUISE_NAMES.join()) err(`Disguise.java (${javaDisguises.join(', ')}) doesn't match src/disguises.mjs (${DISGUISE_NAMES.join(', ')})`);
 
 if (errors.length) {
   console.error(errors.map((e) => `  ${e}`).join('\n'));
